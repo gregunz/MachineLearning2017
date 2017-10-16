@@ -1,5 +1,11 @@
+# -*- coding: utf-8 -*-
+"""
+Implementations
+"""
+
 import numpy as np
 from costs import compute_loss, calculate_loss
+from gradient import compute_gradient
 
 def least_squares_GD(y, tx, initial_w, max_iters, gamma):
     """Gradient descent algorithm."""
@@ -23,8 +29,7 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma):
 
     return w, loss
 
-#TODO: VERIFY THAT 'batch_size' ARGUMENT MUST BE HERE (it's not in the project description)
-def least_squares_SGD(y, tx, initial_w, batch_size, max_iters, gamma):
+def least_squares_SGD(y, tx, initial_w, max_iters, gamma):
     """Stochastic gradient descent."""
     
     assert y.shape[0] == tx.shape[0], "#rows of y and tx must be equal"
@@ -36,7 +41,7 @@ def least_squares_SGD(y, tx, initial_w, batch_size, max_iters, gamma):
     loss = compute_loss(y, tx, initial_w)
 
     for n_iter in range(max_iters):
-        for y_batch, tx_batch in batch_iter(y, tx, batch_size=batch_size, num_batches=1):
+        for y_batch, tx_batch in batch_iter(y, tx, batch_size=1, num_batches=1):
             
             # compute a stochastic gradient and loss
             grad, e = compute_gradient(y_batch, tx_batch, w)
