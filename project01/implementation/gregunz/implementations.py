@@ -55,7 +55,7 @@ def least_squares_SGD(y, tx, initial_w, max_iters, gamma):
 def least_squares(y, tx):
     """compute the least squares solution using the normal equations"""
 
-    assert len(y) == len(tx), "y and tx must have the same number of rows"
+    assert y.shape[0] == y.shape[0], "y and tx must have the same number of rows"
 
     a = tx.T @ tx
     b = tx.T @ y
@@ -63,6 +63,10 @@ def least_squares(y, tx):
 
 def ridge_regression(y, tx, lambda_): 
     """implement ridge regression."""
+
+    assert y.shape[0] == y.shape[0], "y and tx must have the same number of rows"
+    assert lambda_ >= 0 && lambda_ <= 1, "incorrect lambda value (0 >= lambda >= 1)"
+
     N = len(y)
     lambdaI = (lambda_ * 2 * N) * np.eye(tx.shape[1])
     a = (tx.T @ tx) + lambdaI
