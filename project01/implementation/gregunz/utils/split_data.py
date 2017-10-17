@@ -3,15 +3,13 @@
 Split the dataset based on the given ratio
 """
 
-
 import numpy as np
-
 
 def split_data(x, y, ratio, seed=1):
     """split the dataset based on the split ratio."""
     
     assert len(y) == len(tx), "x and y must have the same number of rows"
-    assert ratio > 0 && ratio < 1, "ratio must inside the interval (0, 1), i.e. 0 > ratio > 1"
+    assert ratio > 0 and ratio < 1, "ratio must inside the interval (0, 1), i.e. 0 > ratio > 1"
 
     # set seed
     np.random.seed(seed)
