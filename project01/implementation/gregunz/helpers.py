@@ -24,11 +24,16 @@ def load_csv_data(data_path, sub_sample=False):
     return yb, input_data, ids
 
 
-def predict_labels(weights, data):
+def predict_labels(weights, data, logistic=False):
     """Generates class predictions given weights, and a test data matrix"""
-    y_pred = np.dot(data, weights)
-    y_pred[np.where(y_pred <= 0)] = -1
-    y_pred[np.where(y_pred > 0)] = 1
+    y_pred = data @ weights
+    
+    if logistic:
+        y_pred[np.where(y_pred <= 0.5)] = 0
+        y_pred[np.where(y_pred > 0.5)] = 1
+    else:
+        y_pred[np.where(y_pred <= 0)] = -1
+        y_pred[np.where(y_pred > 0)] = 1
     
     return y_pred
 
@@ -55,6 +60,9 @@ def standardize(x):
     std_x = np.std(x, axis=0)
     x = x / std_x
     return x
+
+def sigmoid(t):
+    return 1 / (1 + np.exp(-t))
 
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     """

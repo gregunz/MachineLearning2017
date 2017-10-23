@@ -22,11 +22,11 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma):
     for n_iter in range(max_iters):
 
         # compute loss, gradient
-        grad, e = compute_gradient(y, tx, w)
+        grad, e = compute_gradient(y, tx, w, fn="mse")
         loss = calculate_loss(e)
 
         # gradient w by descent update
-        w = w - gamma * grad
+        w -= gamma * grad
 
     return w, loss
 
@@ -45,11 +45,11 @@ def least_squares_SGD(y, tx, initial_w, max_iters, gamma):
         for y_batch, tx_batch in batch_iter(y, tx, batch_size=1, num_batches=1):
             
             # compute a stochastic gradient and loss
-            grad, e = compute_gradient(y_batch, tx_batch, w)
+            grad, e = compute_gradient(y_batch, tx_batch, w, fn="mse")
             loss = calculate_loss(e, fn="mse")
 
             # update w through the stochastic gradient update
-            w = w - gamma * grad
+            w -= gamma * grad
 
     return w, loss
 
@@ -62,7 +62,7 @@ def least_squares(y, tx):
     b = tx.T @ y
     return np.linalg.solve(a, b)
 
-def ridge_regression(y, tx, lambda_): 
+def ridge_regression(y, tx, lambda_):
     """implement ridge regression."""
 
     assert y.shape[0] == y.shape[0], "y and tx must have the same number of rows"
@@ -75,6 +75,29 @@ def ridge_regression(y, tx, lambda_):
     return np.linalg.solve(a, b)
 
 def logistic_regression(y, tx, initial_w, max_iters, gamma):
-    raise NotImplementedError
+
+    assert y.shape[0] == tx.shape[0], "#rows of y and tx must be equal"
+    assert tx.shape[1] == initial_w.shape[0], "#col of tx must be equal to the #rows of initial_w"
+    assert max_iters >= 0, "max_iters must be non-negative"
+
+    w = initial_w
+    for _ in range(max_iters):
+        grad = compute_gradient(y, tx, w, fn="sig")
+        w -= gamma * grad
+
+    loss = compute_loss(y, tx, w, fn="sig")
+    return w, loss
+
 def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
-    raise NotImplementedError
+
+    assert y.shape[0] == tx.shape[0], "#rows of y and tx must be equal"
+    assert tx.shape[1] == initial_w.shape[0], "#col of tx must be equal to the #rows of initial_w"
+    assert max_iters >= 0, "max_iters must be non-negative"
+
+    w = initial_w
+    for _ in range(max_iters):
+        grad = compute_gradient(y, tx, w, fn="sig") + 2 * lambda_ * w
+        w -= gamma * grad
+
+    loss = compute_loss(y, tx, w, fn="sig") + lambda_ * w.T @ w
+    return w, loss
