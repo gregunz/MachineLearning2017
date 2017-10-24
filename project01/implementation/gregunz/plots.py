@@ -7,9 +7,8 @@ def display_feature(feature, bins=50, name=None):
     plt.title(name, bins)
     plt.hist(feature, bins=bins)
 
-def display_features(x, mask, bins=50):
-    cols = 3
-    _, axes = plt.subplots(int(np.ceil(x.shape[1] / cols)), cols, figsize=(21, 70))
+def display_features(x, mask, bins=50, cols=3, figsize=(21, 70)):
+    _, axes = plt.subplots(int(np.ceil(x.shape[1] / cols)), cols, figsize=figsize)
     for i in range(x.shape[1]):
         feature = x[:, i][mask[:, i]]
         axes[i // cols, i % cols].hist(feature, bins=bins)
