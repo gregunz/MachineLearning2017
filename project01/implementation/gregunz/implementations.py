@@ -65,7 +65,7 @@ def least_squares(y, tx):
 def ridge_regression(y, tx, lambda_):
     """implement ridge regression."""
 
-    assert y.shape[0] == y.shape[0], "y and tx must have the same number of rows"
+    assert y.shape[0] == tx.shape[0], "y and tx must have the same number of rows"
     assert lambda_ >= 0 and lambda_ <= 1, "incorrect lambda value (0 >= lambda >= 1)"
 
     N = len(y)
@@ -99,5 +99,5 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
         grad = compute_gradient(y, tx, w, fn="sig") + 2 * lambda_ * w
         w -= gamma * grad
 
-    loss = compute_loss(y, tx, w, fn="sig") + lambda_ * w.T @ w
+    loss = compute_loss(y, tx, w, fn="sig") + lambda_ * w.T @ w / 2
     return w, loss
