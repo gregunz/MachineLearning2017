@@ -24,19 +24,14 @@ def load_csv_data(data_path, sub_sample=False):
     return yb, input_data, ids
 
 
-def predict_labels(weights, data, logistic=False):
+def predict_labels(weights, data):
     """Generates class predictions given weights, and a test data matrix"""
     y_pred = data @ weights
     
-    if logistic:
-        y_pred[np.where(y_pred <= 0.5)] = 0
-        y_pred[np.where(y_pred > 0.5)] = 1
-    else:
-        y_pred[np.where(y_pred <= 0)] = -1
-        y_pred[np.where(y_pred > 0)] = 1
-    
-    return y_pred
+    y_pred[np.where(y_pred <= 0)] = -1
+    y_pred[np.where(y_pred > 0)] = 1
 
+    return y_pred
 
 def create_csv_submission(ids, y_pred, name):
     """
@@ -89,6 +84,9 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
         if start_index != end_index:
             yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
 
+def range_mask(length, seq):
+    return np.array([i in seq for i in range(length)])
+
 def mask_rows(x, predicate):
     mask = predicate(x)
     return x[mask.sum(axis=1) <= 0]
@@ -96,3 +94,13 @@ def mask_rows(x, predicate):
 def mask_cols(x, predicate):
     mask = predicate(x)
     return x[mask.sum(axis=0) <= 0]
+
+def separate_train(xs, train_size, data_masks):
+    test_size = np.sum([m.sum() for m in data_masks]) - train_size
+    train_mask = np.r_[[True] * train_size, [False] * test_size]
+    xs_train_size = [(mask & train_mask).sum() for mask in data_masks]
+
+    xs_train = [f[:size] for f, size in zip(xs, xs_train_size)]
+    xs_test  = [f[size:] for f, size in zip(xs, xs_train_size)]
+
+    return xs_train, xs_test

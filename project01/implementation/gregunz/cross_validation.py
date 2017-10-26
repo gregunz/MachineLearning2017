@@ -4,6 +4,8 @@ Helper functions for cross validation
 """
 
 import numpy as np
+from helpers import predict_labels
+from implementations import ridge_regression
 
 def build_k_indices(y, k_fold, seed=1):
     """build k indices for k-fold."""
@@ -30,3 +32,26 @@ def build_k_fold_sets(y, x, k_fold,  seed=1):
         x_va = x[va_indices]
         x_tr = x[tr_indices]
         yield x_tr, x_va, y_tr, y_va
+
+def cross_validation_ridge(y_train, x_train, k_fold, lambda_, seed=np.random.seed()):
+    scores = []
+    for x_tr, x_va, y_tr, y_va in build_k_fold_sets(y_train, x_train, k_fold, seed):
+        w = ridge_regression(y_tr, x_tr, lambda_)
+        
+        y_te_pred = predict_labels(w, x_va)
+        
+        score = (y_te_pred == y_va).mean()
+
+        scores.append(score)
+    return scores
+
+def cross_validation_logistic(y_train, x_train, k_fold, initial_w, max_iters, gamma, seed=np.random.seed()):
+    scores = []
+    for x_tr, x_va, y_tr, y_va in build_k_fold_sets(y_train, x_train, k_fold, seed):
+        w, loss = logistic_regression(y_tr, x_tr, initial_w, max_iters, gamma)
+
+        y_te_pred = predict_labels(w, x_va, )
+        score = (y_te_pred == y_va).mean()
+
+        scores.append(score)
+    return scores

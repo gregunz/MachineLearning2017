@@ -8,7 +8,7 @@ import numpy as np
 def replace_invalid(x, mask_invalid, replace_by=None):
 
     # construct the masked array
-    masked_x = np.ma.array(x, mask=mask_invalid)
+    masked_x = np.ma.array(x, mask=~mask_invalid)
 
     # default filled values are zeroes
     fill_value = [0] * x.shape[1]
@@ -21,7 +21,7 @@ def replace_invalid(x, mask_invalid, replace_by=None):
     if replace_by.lower() == "mf":
         fill_value = []
         for i in range(x.shape[1]):
-            uniqw, inverse = np.unique(x[:, i][~mask_invalid[:, i]], return_inverse=True)
+            uniqw, inverse = np.unique(x[:, i][mask_invalid[:, i]], return_inverse=True)
             idx = np.argmax(np.bincount(inverse))
             fill_value.append(uniqw[idx])
 
