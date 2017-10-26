@@ -88,3 +88,11 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
         end_index = min((batch_num + 1) * batch_size, data_size)
         if start_index != end_index:
             yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
+
+def mask_rows(x, predicate):
+    mask = predicate(x)
+    return x[mask.sum(axis=1) <= 0]
+
+def mask_cols(x, predicate):
+    mask = predicate(x)
+    return x[mask.sum(axis=0) <= 0]
