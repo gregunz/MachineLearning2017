@@ -14,9 +14,9 @@ def indicator_features(mask_invalid):
 def build_poly(x, degree):
     """polynomial basis functions for input data x, for j=0 up to j=degree."""
     assert type(degree) == int, "degree must be of type int"
-    assert degree >= 0, "degree must non-negative"
+    assert degree >= 1, "degree must non-negative"
 
     poly = []
-    for deg in range(degree + 1):
+    for deg in range(1, degree + 1):
         poly.append(np.power(x, deg))
     return np.concatenate(poly, axis=1)
