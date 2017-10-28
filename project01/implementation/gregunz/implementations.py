@@ -6,7 +6,7 @@ Implementations
 import numpy as np
 from helpers import batch_iter
 from costs import compute_loss, calculate_loss
-from gradient import compute_gradient
+from gradients import compute_gradient
 
 def least_squares_GD(y, tx, initial_w, max_iters, gamma):
     """Gradient descent algorithm."""
@@ -60,7 +60,10 @@ def least_squares(y, tx):
 
     a = tx.T @ tx
     b = tx.T @ y
-    return np.linalg.solve(a, b)
+    
+    w = np.linalg.solve(a, b)
+    loss = compute_loss(y, tx, w, fn="mse")
+    return w, loss
 
 def ridge_regression(y, tx, lambda_):
     """implement ridge regression."""
@@ -72,7 +75,10 @@ def ridge_regression(y, tx, lambda_):
     lambdaI = (lambda_ * 2 * N) * np.eye(tx.shape[1])
     a = (tx.T @ tx) + lambdaI
     b = tx.T @ y
-    return np.linalg.solve(a, b)
+
+    w = np.linalg.solve(a, b)
+    loss = compute_loss(y, tx, w, fn="mse")
+    return w, loss
 
 def logistic_regression(y, tx, initial_w, max_iters, gamma):
 

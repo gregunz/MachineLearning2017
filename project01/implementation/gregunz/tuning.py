@@ -13,9 +13,6 @@ from cross_validation import cross_validation_ridge, cv_with_list
 def range_mask(length, seq):
     return np.array([i in seq for i in range(length)])
 
-def index_combinations(n, m, with_repetition=False, with_itself=False):
-    return [(i, j) for i in range(n) for j in range(m) if (with_repetition or j >= i) and (with_itself or j != i)]
-
 def find_useless_features(ys, xs, lambdas, k_fold=4, filename="useless_features"):
     seed = np.random.randint(0, 10000)
     print(seed)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Data Cleaning 
+Data Pre-processing
 """
 
 import numpy as np        

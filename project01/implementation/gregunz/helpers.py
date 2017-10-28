@@ -3,7 +3,6 @@
 import csv
 import numpy as np
 
-
 def load_csv_data(data_path, sub_sample=False):
     """Loads data and returns y (class labels), tX (features) and ids (event ids)"""
     y = np.genfromtxt(data_path, delimiter=",", skip_header=1, dtype=str, usecols=1)
@@ -23,16 +22,6 @@ def load_csv_data(data_path, sub_sample=False):
 
     return yb, input_data, ids
 
-
-def predict_labels(weights, data):
-    """Generates class predictions given weights, and a test data matrix"""
-    y_pred = data @ weights
-    
-    y_pred[np.where(y_pred <= 0)] = -1
-    y_pred[np.where(y_pred > 0)] = 1
-
-    return y_pred
-
 def create_csv_submission(ids, y_pred, name):
     """
     Creates an output file in csv format for submission to kaggle
@@ -46,18 +35,6 @@ def create_csv_submission(ids, y_pred, name):
         writer.writeheader()
         for r1, r2 in zip(ids, y_pred):
             writer.writerow({'Id':int(r1),'Prediction':int(r2)})
-
-def standardize(x):
-    """Standardize the original data set."""
-    x = x.copy()
-    mean_x = np.mean(x, axis=0)
-    x = x - mean_x
-    std_x = np.std(x, axis=0)
-    x = x / std_x
-    return x
-
-def sigmoid(t):
-    return 1 / (1 + np.exp(-t))
 
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     """
@@ -87,13 +64,20 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
 def range_mask(length, seq):
     return np.array([i in seq for i in range(length)])
 
-def mask_rows(x, predicate):
-    mask = predicate(x)
-    return x[mask.sum(axis=1) <= 0]
+def create_pairs(n, m, with_repetition=False, with_itself=False):
+    return [(i, j) for i in range(n) for j in range(m) if (with_repetition or j >= i) and (with_itself or j != i)]
 
-def mask_cols(x, predicate):
-    mask = predicate(x)
-    return x[mask.sum(axis=0) <= 0]
+def all_combinations_of(xs, fn, combs):
+    combinations = []
+    for i, pairs in enumerate(combs):
+        combinations.append(combinations_of(xs[i], fn, pairs))
+    return combinations
+
+def combinations_of(x, fn, pairs):
+    if len(pairs) > 0:
+        combinations = [fn(x[:, a], x[:, b]).reshape((x.shape[0], 1)) for a, b in pairs]
+        return np.concatenate(combinations, axis=1)
+    return np.array([])
 
 def separate_train(xs, train_size, data_masks):
     test_size = np.sum([m.sum() for m in data_masks]) - train_size

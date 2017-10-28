@@ -4,7 +4,7 @@ A function to compute the cost.
 """
 
 import numpy as np
-from helpers import sigmoid
+from functions import sigmoid
 
 def compute_loss(y, tx, w, fn="mse"):
     """compute the loss given the function 'fn'"""

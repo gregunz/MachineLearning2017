@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Gradient
+Gradients
 """
-from helpers import sigmoid
+from functions import sigmoid
 
 def compute_gradient(y, tx, w, fn="mse"):
     """Compute the (stochastic) gradient given a cost function."""
