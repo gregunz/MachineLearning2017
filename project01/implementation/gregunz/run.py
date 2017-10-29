@@ -110,7 +110,7 @@ ys = [y[mask[:train_size]] for mask in data_masks]
 # In[13]:
 
 
-features_masks = [x_brute[m].std(axis=0) != 0 for m in data_masks]
+features_masks = [(x_brute[m].std(axis=0) != 0) & np.any(x_brute[m] != -999., axis=0) for m in data_masks]
 
 
 # In[14]:
@@ -130,7 +130,7 @@ xs_brute = [x_brute[d_m][:, f_m] for d_m, f_m in zip(data_masks, features_masks)
 # In[15]:
 
 
-xs_replace_invalid = [replace_invalid(x, ~(x == invalid_value), replace_by="mf") for x in xs_brute]
+xs_replace_invalid = [replace_invalid(x, x != invalid_value, replace_by="mf") for x in xs_brute]
 
 [x.shape for x in xs_replace_invalid]
 
@@ -166,7 +166,7 @@ xs_non_negative = [x - x.min(axis=0) for x in xs_cleaned]
 # In[19]:
 
 
-xs_standardized = [standardize(x) for x in xs_cleaned]
+xs_standardized = [standardize(x.copy()) for x in xs_cleaned]
 
 [f.shape for f in xs_standardized]
 
@@ -201,8 +201,8 @@ def create_poly_features(xs, degrees):
 # In[23]:
 
 
-degrees_no_angles = [6, 10, 11]
-poly_std = create_poly_features(xs_standardized, degrees_no_angles)
+degrees_std = [6, 11, 11]
+poly_std = create_poly_features(xs_standardized, degrees_std)
 
 [x.shape for x in poly_std]
 
@@ -210,7 +210,7 @@ poly_std = create_poly_features(xs_standardized, degrees_no_angles)
 # In[24]:
 
 
-degrees_log = [5, 5, 5]
+degrees_log = [5] * 3 #[5, 5, 5]
 poly_log = create_poly_features(xs_log, degrees_log)
 
 [x.shape for x in poly_log]
@@ -219,7 +219,7 @@ poly_log = create_poly_features(xs_log, degrees_log)
 # In[25]:
 
 
-degrees_inv_log = [5, 5, 5]
+degrees_inv_log = [5] * 3 #[3, 3, 3]
 poly_inv_log = create_poly_features(xs_inv_log, degrees_inv_log)
 
 [x.shape for x in poly_inv_log]
@@ -237,7 +237,7 @@ def create_poly_roots_features(xs, degrees):
 # In[27]:
 
 
-degrees_roots_no_angles = [3, 3, 3]
+degrees_roots_no_angles = [3] * 3
 poly_roots = create_poly_roots_features(xs_non_negative, degrees_roots_no_angles)
 [x.shape for x in poly_roots]
 
@@ -247,32 +247,54 @@ poly_roots = create_poly_roots_features(xs_non_negative, degrees_roots_no_angles
 # In[28]:
 
 
-features_poly = [np.concatenate(x, axis=1) for x in zip(poly_std, poly_roots, poly_log, poly_inv_log)]
+all_poly = zip(
+    poly_std,
+    #poly_roots,
+    poly_log,
+    poly_inv_log
+)
+
+features_poly = [np.concatenate(x, axis=1) for x in all_poly]
 
 [x.shape for x in features_poly]
 
 
-# ## Combinations of features
-
 # In[29]:
 
 
-xs_mix = [np.concatenate(x, axis=1) for x in zip(xs_standardized, xs_log, xs_inv_log)]
-    
-[f.shape for f in xs_mix]
+del poly_std
+del poly_roots
+del poly_log
+del poly_inv_log
 
+
+# ## Combinations of features
 
 # In[30]:
 
 
+xs_mix = [
+    np.concatenate((xs_standardized[0], xs_log[0], xs_inv_log[0]), axis=1),
+    np.concatenate((xs_standardized[1], xs_log[1]), axis=1),
+    np.concatenate((xs_standardized[2], xs_log[2]), axis=1),
+]
+
+#[np.concatenate(x, axis=1) for x in zip(xs_standardized, xs_log)] #, xs_log, xs_inv_log)]
+    
+[f.shape for f in xs_mix]
+
+
+# In[31]:
+
+
 def build_combinations(fn, xs):
     fn_combinations = [create_pairs(x.shape[1], x.shape[1]) for x in xs]
-    print([len(c) for c in fn_combinations])
+    #print([len(c) for c in fn_combinations])
     return all_combinations_of(xs, fn, fn_combinations)
     
 
 
-# In[31]:
+# In[32]:
 
 
 features_mult = build_combinations(mult, xs_mix)
@@ -280,7 +302,7 @@ features_mult = build_combinations(mult, xs_mix)
 [x.shape for x in features_mult]
 
 
-# In[32]:
+# In[33]:
 
 
 features_abs_dif = build_combinations(abs_dif, xs_mix)
@@ -288,9 +310,15 @@ features_abs_dif = build_combinations(abs_dif, xs_mix)
 [x.shape for x in features_abs_dif]
 
 
+# In[34]:
+
+
+del xs_mix
+
+
 # ## Constant features (ones)
 
-# In[ ]:
+# In[35]:
 
 
 features_ones = [np.ones(m.sum()).reshape((m.sum(), 1)) for m in data_masks]
@@ -300,14 +328,14 @@ features_ones = [np.ones(m.sum()).reshape((m.sum(), 1)) for m in data_masks]
 
 # ## Concat all features
 
-# In[ ]:
+# In[36]:
 
 
 all_features = zip(
     features_ones,
     features_poly,
     features_mult,
-    features_abs_dif,
+    features_abs_dif
 )
 
 features = [np.concatenate([f for f in list(fs) if len(f) > 0], axis=1) for fs in list(all_features)]
@@ -315,9 +343,18 @@ features = [np.concatenate([f for f in list(fs) if len(f) > 0], axis=1) for fs i
 [f.shape for f in features]
 
 
+# In[45]:
+
+
+del features_ones
+del features_poly
+del features_mult
+del features_abs_dif
+
+
 # # Separating Training and Test data
 
-# In[ ]:
+# In[63]:
 
 
 xs_train, xs_test = separate_train(features, train_size, data_masks)
@@ -327,13 +364,13 @@ xs_train, xs_test = separate_train(features, train_size, data_masks)
 
 # # Cross validation
 
-# In[ ]:
+# In[61]:
 
 
 k_fold = 4
 iters = 1
 
-lambdas = [1e-04] * 3 #[1e-05, 1e-05, 1e-05]
+lambdas = [1e-05, 1e-03, 5e-04]
 seed = np.random.randint(10000)
 
 scores = cv_with_list(ys, xs_train, lambdas, k_fold=k_fold, iters=iters, seed=seed, print_=True)
@@ -353,5 +390,6 @@ y_submission = predict_with_ridge(ys, xs_train, xs_test, lambdas, data_masks)
 # In[ ]:
 
 
-create_csv_submission(indices_test, y_submission, "submissions/pred27.csv")
+create_csv_submission(indices_test, y_submission, "submissions/pred28.csv")
 
+s
