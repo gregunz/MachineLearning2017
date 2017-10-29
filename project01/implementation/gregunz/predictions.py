@@ -18,6 +18,6 @@ def predict_with_ridge(ys, xs_train, xs_test, lambdas, data_masks):
     test_size = np.sum([x.shape[0] for x in xs_test])
     y_sub = np.zeros(test_size)
     for y, x_tr, x_te, lambda_, mask in zip(ys, xs_train, xs_test, lambdas, data_masks):
-        w = ridge_regression(y, x_tr, lambda_)
+        w, _ = ridge_regression(y, x_tr, lambda_)
         y_sub[mask[train_size:]] = predict_labels(w, x_te)
     return y_sub
