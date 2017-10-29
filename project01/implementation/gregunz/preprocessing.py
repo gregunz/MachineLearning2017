@@ -28,3 +28,12 @@ def replace_invalid(x, mask_invalid, replace_by=None):
     masked_x.set_fill_value(fill_value)
 
     return masked_x.filled()
+
+def standardize(x):
+    """Standardize the original data set."""
+    x = x.copy()
+    mean_x = np.mean(x, axis=0)
+    x = x - mean_x
+    std_x = np.std(x, axis=0)
+    x = x / std_x
+    return x

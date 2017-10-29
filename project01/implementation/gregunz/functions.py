@@ -9,7 +9,7 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 def inv_log(x):
-    return 1 / (1 + np.log(x))
+    return np.log(1 / (1 + x))
 
 def abs_dif(x, y):
     return np.abs(x - y)

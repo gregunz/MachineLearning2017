@@ -55,7 +55,9 @@ def cross_validation_logistic(y_train, x_train, k_fold, initial_w, max_iters, ga
         scores.append(score)
     return np.array(scores)
 
-def cv_with_list(ys, xs, lambdas, k_fold=4, iters=1, seed=np.random.randint(100000), print_=False):
+def cv_with_list(ys, xs, lambdas, k_fold=4, iters=1, seed=None, print_=False):
+    if seed == None:
+        seed = np.randon.randint(100000)
     xs_scores = []
     train_size = np.sum([x.shape[0] for x in xs])
     for y_tr, x_tr, lambda_ in zip(ys, xs, lambdas):
