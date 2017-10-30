@@ -105,5 +105,5 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
         grad = compute_gradient(y, tx, w, fn="sig") + 2 * lambda_ * w
         w -= gamma * grad
 
-    loss = compute_loss(y, tx, w, fn="sig") + lambda_ * w.T @ w / 2
+    loss = compute_loss(y, tx, w, fn="sig") + lambda_ * (w.T @ w) / 2
     return w, loss
