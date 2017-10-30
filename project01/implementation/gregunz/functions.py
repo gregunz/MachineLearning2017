@@ -15,4 +15,4 @@ def abs_dif(x, y):
     return np.abs(x - y)
 
 def mult(x, y, deg=1):
-    return x**deg * y**deg
+    return np.power(x, deg) * np.power(y, deg)
