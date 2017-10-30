@@ -49,7 +49,7 @@ fn_inv_log = [True] * num_models
 functions = [[mult, abs_dif],] * num_models
 
 # Hyper parameters
-lambdas = [5e-04, 5e-05, 5e-03]
+lambdas = [1e-03, 3.16e-03, 1e-02]
 
 y_submission = np.zeros(test_size)
 
