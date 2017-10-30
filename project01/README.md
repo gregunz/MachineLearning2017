@@ -1,4 +1,4 @@
-# How to run our run.py
+# How to predict whether Higgs Boson exists \o/
 1. Download the train and test sets
 2. Place them in the same directory as "run.py" (as train.csv test.csv)
 3. Run the "run.py" script
