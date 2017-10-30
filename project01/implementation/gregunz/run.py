@@ -10,8 +10,8 @@ from feature_eng import build_x
 from predictions import predict_labels
 
 # Loading the data sets
-y_train, x_brute_train, _ = load_csv_data("../data/train.csv")
-_, x_brute_test, indices_test = load_csv_data("../data/test.csv")
+y_train, x_brute_train, _ = load_csv_data("train.csv")
+_, x_brute_test, indices_test = load_csv_data("test.csv")
 x_brute = np.concatenate((x_brute_train, x_brute_test))
 train_size = x_brute_train.shape[0]
 test_size = x_brute_test.shape[0]
