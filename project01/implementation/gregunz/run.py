@@ -39,9 +39,9 @@ xs_brute_test = [x_brute_test[d_m[train_size:]][:, f_m] for d_m, f_m in zip(data
 
 # Models variables
 degrees = [8, 11, 12]
-roots = [2, 3, 3]
-log_degrees = [5, 5, 5]
-inv_log_degrees = [6, 5, 4]
+roots = [3] * num_models
+log_degrees = [5] * num_models
+inv_log_degrees = [5] * num_models
 fn_log = [True] * num_models
 fn_inv_log = [True] * num_models
 functions = [[mult, abs_dif],] * num_models
@@ -62,4 +62,4 @@ for i, mask in enumerate(data_masks):
     mask = mask[train_size:]
     y_submission[mask] = predict_labels(w, x_test)
     
-create_csv_submission(indices_test, y_submission, "submissions/final_submission.csv")
+create_csv_submission(indices_test, y_submission, "submissions/final_submission2.csv")
