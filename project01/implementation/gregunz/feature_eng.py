@@ -22,7 +22,7 @@ def build_poly(x, degree, roots=False):
 
 def build_x(x_train, x_test, degree, root=None, replace_by="mf", f_mask=None,
             log_degree=None, inv_log_degree=None, fn_log=True, fn_inv_log=True,
-            functions=None, invalid_value=-999, print_=False):
+            functions=None, tanh=True, invalid_value=-999, print_=False):
     
     if print_:
         print(degree, root, replace_by, f_mask, log_degree, inv_log_degree, fn_log, fn_inv_log, functions)
@@ -54,6 +54,9 @@ def build_x(x_train, x_test, degree, root=None, replace_by="mf", f_mask=None,
         print("Starting poly")
     x = build_poly(x_std, degree)
     
+    
+    if tanh:
+        x = np.concatenate((x, np.tanh(x_std)), axis=1)
     if log_degree != None:
         x_log = standardize(np.log(1 + x_non_negative))
         x = np.concatenate((x, build_poly(x_log, log_degree)), axis=1)
