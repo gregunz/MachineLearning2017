@@ -38,16 +38,18 @@ xs_brute_train = [x_brute_train[d_m[:train_size]][:, f_m] for d_m, f_m in zip(da
 xs_brute_test = [x_brute_test[d_m[train_size:]][:, f_m] for d_m, f_m in zip(data_masks, features_masks)]
 
 # Models variables
-degrees = [8, 11, 12]
-roots = [3] * num_models
-log_degrees = [5] * num_models
-inv_log_degrees = [5] * num_models
+degrees = [9, 11, 12]
+roots = [3, 4, 3]
+tanh_degrees = [3, 4, 3]
+log_degrees = [5, 6, 5]
+inv_log_degrees = [5, 6, 5]
+fn_tanh = [True] * num_models
 fn_log = [True] * num_models
 fn_inv_log = [True] * num_models
 functions = [[mult, abs_dif],] * num_models
 
 # Hyper parameters
-lambdas = [5e-04, 1e-05, 5e-03]
+lambdas = [5e-04, 5e-05, 5e-03]
 
 y_submission = np.zeros(test_size)
 

@@ -21,11 +21,11 @@ def build_poly(x, degree, roots=False):
     return np.concatenate(poly, axis=1)
 
 def build_x(x_train, x_test, degree, root=None, replace_by="mf", f_mask=None,
-            log_degree=None, inv_log_degree=None, fn_log=True, fn_inv_log=True,
-            functions=None, tanh=True, invalid_value=-999, print_=False):
+            log_degree=None, inv_log_degree=None, tanh_degree=None, fn_log=True, fn_inv_log=True,
+            fn_tanh=True, functions=None, invalid_value=-999, print_=False):
     
     if print_:
-        print(degree, root, replace_by, f_mask, log_degree, inv_log_degree, fn_log, fn_inv_log, functions)
+        print(degree, root, log_degree, inv_log_degree, tanh_degree, fn_log, fn_inv_log, fn_tanh, functions)
     
     assert f_mask == None or len(f_mask) == x.shape[1]
     assert log_degree == None or type(log_degree) == int
@@ -46,7 +46,7 @@ def build_x(x_train, x_test, degree, root=None, replace_by="mf", f_mask=None,
     x = replace_invalid(x, x != invalid_value, replace_by="mf")
 
     x_non_negative = x - x.min(axis=0)
-    x_std = standardize(x)
+    x_std = standardize(x.copy())
     
     # Features Engineering
     # poly
@@ -54,9 +54,9 @@ def build_x(x_train, x_test, degree, root=None, replace_by="mf", f_mask=None,
         print("Starting poly")
     x = build_poly(x_std, degree)
     
-    
-    if tanh:
-        x = np.concatenate((x, np.tanh(x_std)), axis=1)
+    if tanh_degree != None:
+        x_tanh = standardize(np.tanh(x_std))
+        x = np.concatenate((x, build_poly(x_tanh, tanh_degree)), axis=1)
     if log_degree != None:
         x_log = standardize(np.log(1 + x_non_negative))
         x = np.concatenate((x, build_poly(x_log, log_degree)), axis=1)
@@ -70,7 +70,10 @@ def build_x(x_train, x_test, degree, root=None, replace_by="mf", f_mask=None,
     if print_:
         print("Starting combinations")
     if functions != None:
-        x_comb = x_std
+        x_comb = x_std.copy()
+        if fn_tanh:
+            x_tanh = standardize(np.tanh(x_std))
+            x_comb = np.concatenate((x_comb, x_tanh), axis=1)
         if fn_log:
             x_log = np.log(1 + x_non_negative)
             x_comb = np.concatenate((x_comb, x_log), axis=1)
