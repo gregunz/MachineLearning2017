@@ -39,7 +39,7 @@ def load_training_dataset(data_path= "../",sample_size= None, binary_gt= False):
 
 def sk_mean_F1_score(prediction, groundtruth):
     f1s=[]
-    for i in range(prediction.shape[0])
+    for i in range(prediction.shape[0]):
         y_true = np.reshape(groundtruth[i], [-1])
         y_pred = np.reshape(prediction[i], [-1])
         f1s.append(f1_score(y_true, y_pred, average='macro'))
