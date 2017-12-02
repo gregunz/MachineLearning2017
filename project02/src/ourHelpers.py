@@ -1,6 +1,8 @@
 import os
 from helpers import *
 
+from sklearn.metrics import f1_score
+
 def load_training_dataset(data_path= "../",sample_size= None, binary_gt= False):
     """ Load the dataset into numpy array
     Value are sorted on there name such that Y[i] correspond to groundtruth of X[i]
@@ -34,3 +36,11 @@ def load_training_dataset(data_path= "../",sample_size= None, binary_gt= False):
     if binary_gt:
         Y = np.array(Y>0.5).astype(int)
     return X, Y
+
+def sk_mean_F1_score(prediction, groundtruth):
+    f1s=[]
+    for i in range(prediction.shape[0])
+        y_true = np.reshape(groundtruth[i], [-1])
+        y_pred = np.reshape(prediction[i], [-1])
+        f1s.append(f1_score(y_true, y_pred, average='macro'))
+    return np.array(f1s).mean()

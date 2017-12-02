@@ -1,6 +1,14 @@
 import tensorflow as tf
 import numpy as np
 
+def F1_score(labels, predictions):
+    #P, update_op1 = tf.contrib.metrics.streaming_precision(predictions, labels)
+    P, update_op1 = tf.metrics.precision(predictions, labels)
+    #R, update_op2 = tf.contrib.metrics.streaming_recall(predictions, labels)
+    R, update_op2 = tf.metrics.recall(predictions, labels)
+    eps = 1e-5; #To prevent division by zero
+    return (2*(P*R)/(P+R+eps), tf.group(update_op1, update_op2))
+
 def mean_F1_score(labels, predictions):
     F1_scores = tf.constant(0.0)
     ops = tf.group()
@@ -9,14 +17,14 @@ def mean_F1_score(labels, predictions):
         lab = labels[i]
         pred = tf.reshape(pred, [-1])
         lab = tf.reshape(lab, [-1])
-        (P, P_op) = tf.metrics.precision(labels=lab, predictions=pred)
-        (R, R_op) = tf.metrics.recall(labels=lab, predictions=pred)
-        ops = tf.group(ops, P_op, R_op)
-        F1 = 2*P*R / (P+R)
+        F1, update_op = F1_score(lan, pred)
+        ops = tf.group(ops, update_op)
         F1_scores +=F1
 
     # the return must be a tuple (metric_value, update_op)
-    return (F1_scores / predictions.shape[0] , ops)
+    # TODO change 10.0 by a variable
+    return (F1_scores / 10.0 , ops)
+
 
 
 #DEFINE THE BASELINE MODEL
@@ -89,13 +97,9 @@ def baseline_model_fn(features, labels, mode, params):
     labels = labels > 0.5
 
     eval_metric_ops = {
-        "loss":loss
-    }
-
-    """{
-        "loss": loss,
+        #"loss": loss,
         "mean_F1-Score": mean_F1_score(labels=labels, predictions=predictions)
     }
-    """
+
 
     return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op, eval_metric_ops=eval_metric_ops)
