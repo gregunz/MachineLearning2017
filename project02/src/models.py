@@ -1,4 +1,23 @@
 import tensorflow as tf
+import numpy as np
+
+def mean_F1_score(labels, predictions):
+    F1_scores = tf.constant(0.0)
+    ops = tf.group()
+    for i in range(predictions.shape[0]):
+        pred = predictions[i]
+        lab = labels[i]
+        pred = tf.reshape(pred, [-1])
+        lab = tf.reshape(lab, [-1])
+        (P, P_op) = tf.metrics.precision(labels=lab, predictions=pred)
+        (R, R_op) = tf.metrics.recall(labels=lab, predictions=pred)
+        ops = tf.group(ops, P_op, R_op)
+        F1 = 2*P*R / (P+R)
+        F1_scores +=F1
+
+    # the return must be a tuple (metric_value, update_op)
+    return (F1_scores / predictions.shape[0] , ops)
+
 
 #DEFINE THE BASELINE MODEL
 def baseline_model_fn(features, labels, mode, params):
@@ -44,11 +63,10 @@ def baseline_model_fn(features, labels, mode, params):
                                          padding= "same")
     
     logits = tf.reshape(logits, [-1, h*w])
-
+    predictions = tf.sigmoid(logits)
+    predictions = tf.reshape(predictions, [-1, h, w])
     # Provide an estimator spec for `ModeKeys.PREDICT`.
     if mode == tf.estimator.ModeKeys.PREDICT:
-        predictions = tf.sigmoid(logits)
-        predictions = tf.reshape(predictions, [-1, h, w])
         print(predictions.shape)
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
     
@@ -67,5 +85,17 @@ def baseline_model_fn(features, labels, mode, params):
     train_op = optimizer.minimize(loss=loss, 
                                   global_step=tf.train.get_global_step())
     
-    
-    return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
+    #cast label to boolean
+    labels = labels > 0.5
+
+    eval_metric_ops = {
+        "loss":loss
+    }
+
+    """{
+        "loss": loss,
+        "mean_F1-Score": mean_F1_score(labels=labels, predictions=predictions)
+    }
+    """
+
+    return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op, eval_metric_ops=eval_metric_ops)

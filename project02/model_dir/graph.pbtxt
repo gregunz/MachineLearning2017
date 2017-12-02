@@ -3050,7 +3050,105 @@ node {
   }
 }
 node {
+  name: "Sigmoid"
+  op: "Sigmoid"
+  input: "Reshape"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 10
+          }
+          dim {
+            size: 160000
+          }
+        }
+      }
+    }
+  }
+}
+node {
   name: "Reshape_1/shape"
+  op: "Const"
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 3
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_INT32
+        tensor_shape {
+          dim {
+            size: 3
+          }
+        }
+        tensor_content: "\377\377\377\377\220\001\000\000\220\001\000\000"
+      }
+    }
+  }
+}
+node {
+  name: "Reshape_1"
+  op: "Reshape"
+  input: "Sigmoid"
+  input: "Reshape_1/shape"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "Tshape"
+    value {
+      type: DT_INT32
+    }
+  }
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 10
+          }
+          dim {
+            size: 400
+          }
+          dim {
+            size: 400
+          }
+        }
+      }
+    }
+  }
+}
+node {
+  name: "Reshape_2/shape"
   op: "Const"
   attr {
     key: "_output_shapes"
@@ -3086,10 +3184,10 @@ node {
   }
 }
 node {
-  name: "Reshape_1"
+  name: "Reshape_2"
   op: "Reshape"
   input: "random_shuffle_queue_DequeueMany:2"
-  input: "Reshape_1/shape"
+  input: "Reshape_2/shape"
   attr {
     key: "T"
     value {
@@ -3273,7 +3371,7 @@ node {
   name: "logistic_loss/mul"
   op: "Mul"
   input: "Reshape"
-  input: "Reshape_1"
+  input: "Reshape_2"
   attr {
     key: "T"
     value {
@@ -4777,7 +4875,7 @@ node {
   name: "gradients/logistic_loss/mul_grad/mul"
   op: "Mul"
   input: "gradients/logistic_loss/sub_grad/tuple/control_dependency_1"
-  input: "Reshape_1"
+  input: "Reshape_2"
   attr {
     key: "T"
     value {
@@ -8081,7 +8179,7 @@ node {
         dtype: DT_FLOAT
         tensor_shape {
         }
-        float_val: 0.05000000074505806
+        float_val: 0.009999999776482582
       }
     }
   }
@@ -8631,6 +8729,63 @@ node {
     key: "use_locking"
     value {
       b: false
+    }
+  }
+}
+node {
+  name: "Greater/y"
+  op: "Const"
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+        }
+      }
+    }
+  }
+  attr {
+    key: "dtype"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "value"
+    value {
+      tensor {
+        dtype: DT_FLOAT
+        tensor_shape {
+        }
+        float_val: 0.5
+      }
+    }
+  }
+}
+node {
+  name: "Greater"
+  op: "Greater"
+  input: "Reshape_2"
+  input: "Greater/y"
+  attr {
+    key: "T"
+    value {
+      type: DT_FLOAT
+    }
+  }
+  attr {
+    key: "_output_shapes"
+    value {
+      list {
+        shape {
+          dim {
+            size: 10
+          }
+          dim {
+            size: 160000
+          }
+        }
+      }
     }
   }
 }
@@ -11504,7 +11659,7 @@ node {
         dtype: DT_STRING
         tensor_shape {
         }
-        string_val: "_temp_49fe9bed79d8472e81fcb5a48f50679a/part"
+        string_val: "_temp_bbf7aaf052b64fb5b4a2826b02fb2d27/part"
       }
     }
   }
