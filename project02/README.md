@@ -15,6 +15,11 @@
 - Rotations (45°, 90°, 180°, ..., ?)
 - [Massachusetts Roads Dataset][m-dataset]
 
+### Model
+- CNN
+- FCN
+
+
 ## Links
 - [Google Doc][google-doc] (use for brainstorming)
 
