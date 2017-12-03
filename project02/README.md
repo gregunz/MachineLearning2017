@@ -1,9 +1,17 @@
 # [Road Segmentation][kaggle]
 
 ## How to use
-- run run.py
+- data should be put inside the data folder (data/training/groundtruths/*.png, data/training/images/*.png, data/test_set_images/*/*.png)
+- run file xxx
 
-## Data Augmentation
+## What does each file do ?
+- xxx
+- yyy
+- zzz
+
+## Implementation
+
+### Data Augmentation
 - Rotations (45°, 90°, 180°, ..., ?)
 - [Massachusetts Roads Dataset][m-dataset]
 
