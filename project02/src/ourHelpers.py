@@ -1,4 +1,5 @@
 import os
+import numpy as np
 from helpers import *
 
 from sklearn.metrics import f1_score
@@ -34,7 +35,7 @@ def load_training_dataset(data_path= "../",sample_size= None, binary_gt= False):
     X = np.array(X)
     Y = np.array(Y)
     if binary_gt:
-        Y = np.array(Y>0.5).astype(int)
+        Y = np.array(Y>0.5).astype(np.uint8)
     return X, Y
 
 def sk_mean_F1_score(prediction, groundtruth):
