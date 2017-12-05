@@ -4,12 +4,47 @@ from keras.models import *
 from keras.optimizers import *
 
 from abstract_model import AModel
-from helpers import f1
+from helpers import f1, precision, recall
 
 
 class UNet(AModel):
-    def get_model(self, kernel_size=3, pool_size=(2, 2)):
+    def get_model(self, deepness=4, kernel_size=3, pool_size=(2, 2)):
+
         inputs = Input((self.img_rows, self.img_cols, self.n_channels))
+
+        def loop(deep_ind, going_deep, convs, pools):
+            if going_deep:
+                if deep_ind < deepness:
+                    layers = 2 ** (5 + deep_ind)
+                    conv = Conv2D(layers, kernel_size, activation='relu', padding='same')(pools[deep_ind])
+                    conv = Conv2D(layers, kernel_size, activation='relu', padding='same')(conv)
+                    pool = MaxPooling2D(pool_size)(conv)
+                    convs.append(conv)
+                    pools.append(pool)
+                    return loop(deep_ind=deep_ind + 1, going_deep=going_deep, convs=convs, pools=pools)
+                if deep_ind >= deepness:
+                    layers = 2 ** (5 + deep_ind)
+                    conv = Conv2D(layers, kernel_size, activation='relu', padding='same')(pools[deep_ind])
+                    conv = Conv2D(layers, kernel_size, activation='relu', padding='same')(conv)
+                    convs.append(conv)
+                    return loop(deep_ind=deep_ind - 1, going_deep=not going_deep, convs=convs, pools=pools)
+            if not going_deep:
+                if deep_ind >= 0:
+                    layers = 2 ** (5 + deep_ind)
+                    up = concatenate([Conv2DTranspose(layers, (2, 2), strides=(2, 2), padding='same')(
+                        convs[2 * deepness - deep_ind - 1]), convs[deep_ind]], axis=3)
+                    conv = Conv2D(layers, kernel_size, activation='relu', padding='same')(up)
+                    conv = Conv2D(layers, kernel_size, activation='relu', padding='same')(conv)
+                    convs.append(conv)
+                    return loop(deep_ind=deep_ind - 1, going_deep=going_deep, convs=convs, pools=pools)
+                if deep_ind < 0:
+                    conv = Conv2D(1, 1, activation='sigmoid')(convs[-1])
+                    model = Model(inputs=[inputs], outputs=[conv])
+                    model.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy',
+                                  metrics=[precision, recall, f1, 'accuracy'])
+                    return model
+
+        '''
         conv1 = Conv2D(32, kernel_size, activation='relu', padding='same')(inputs)
         conv1 = Conv2D(32, kernel_size, activation='relu', padding='same')(conv1)
         pool1 = MaxPooling2D(pool_size)(conv1)
@@ -45,12 +80,17 @@ class UNet(AModel):
         conv9 = Conv2D(32, kernel_size, activation='relu', padding='same')(up9)
         conv9 = Conv2D(32, kernel_size, activation='relu', padding='same')(conv9)
 
-        conv10 = Conv2D(1, (1, 1), activation='sigmoid')(conv9)
+        conv10 = Conv2D(1, 1, activation='sigmoid')(conv9)
 
         model = Model(inputs=[inputs], outputs=[conv10])
 
-        model.compile(optimizer=Adam(lr=1e-5), loss='binary_crossentropy', metrics=[f1])
+        model.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy', metrics=[precision, recall, f1, 'accuracy'])
 
+        return model
+        '''
+        print("loading model...")
+        model = loop(deep_ind=0, going_deep=True, convs=[], pools=[inputs])
+        print("model loaded")
         return model
 
     '''

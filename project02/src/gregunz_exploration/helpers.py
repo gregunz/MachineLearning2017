@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 from keras import backend as K
 
+
 def load_image(infilename):
     data = Image.open(infilename)
     return data
@@ -55,8 +56,8 @@ def ls_rec_path(path):
 
 
 def img_to_rgb(img):
-    if len(img.shape) < 3:
-        return np.repeat(img, 3).reshape(img.shape + (3,))
+    if len(img.shape) < 3 or img.shape[2] == 1:
+        return np.repeat(img, 3).reshape(img.shape[0], img.shape[1], 3)
     else:
         return img
 
@@ -68,32 +69,34 @@ def img_to_gray(img):
         r, g, b = img[:, :, 0], img[:, :, 1], img[:, :, 2]
         return (0.2989 * r + 0.5870 * g + 0.1140 * b).reshape((img.shape[0], img.shape[1], 1))
 
+
 def f1(y_true, y_pred):
-    def recall(y_true, y_pred):
-        """Recall metric.
+    prec = precision(y_true, y_pred)
+    rec = recall(y_true, y_pred)
+    return 2 * ((prec * rec) / (prec + rec))
 
-        Only computes a batch-wise average of recall.
 
-        Computes the recall, a metric for multi-label classification of
-        how many relevant items are selected.
-        """
-        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-        possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-        recall = true_positives / (possible_positives + K.epsilon())
-        return recall
+def recall(y_true, y_pred):
+    """Recall metric.
 
-    def precision(y_true, y_pred):
-        """Precision metric.
+    Only computes a batch-wise average of recall.
 
-        Only computes a batch-wise average of precision.
+    Computes the recall, a metric for multi-label classification of
+    how many relevant items are selected.
+    """
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    return true_positives / (possible_positives + K.epsilon())
 
-        Computes the precision, a metric for multi-label classification of
-        how many selected items are relevant.
-        """
-        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-        predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
-        precision = true_positives / (predicted_positives + K.epsilon())
-        return precision
-    precision = precision(y_true, y_pred)
-    recall = recall(y_true, y_pred)
-    return 2*((precision*recall)/(precision+recall))
+
+def precision(y_true, y_pred):
+    """Precision metric.
+
+    Only computes a batch-wise average of precision.
+
+    Computes the precision, a metric for multi-label classification of
+    how many selected items are relevant.
+    """
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    return true_positives / (predicted_positives + K.epsilon())

@@ -17,34 +17,39 @@ class AModel(ABC):
         self.n_channels = n_channels
         super().__init__()
 
-    def load_data(self, data_dir="../../data/"):
+    def load_data(self, data_dir="../../data/", sample_size=np.inf):
         train_dir = data_dir + "training/"
         test_dir = data_dir + "test_set_images/"
 
         two_d_shape = (self.img_rows, self.img_cols)
         three_d_shape = two_d_shape + (self.n_channels,)
 
+        print("loading data...")
         print('>>> all images will be resized to shape: ' + str(three_d_shape))
 
-        def to_channel(img): return img_to_gray(img) if self.n_channels == 1 else img_to_rgb(img)
+        def to_channel(img, is_y=False):
+            return img_to_gray(img) if self.n_channels == 1 or is_y else img_to_rgb(img)
 
-        def to_img(path): return to_channel(np.array(load_image(path).resize(two_d_shape)))
+        def to_img(path, is_y=False):
+            return to_channel(np.array(load_image(path).resize(two_d_shape)), is_y)
 
-        def path_to_data(path): return np.array([to_img(p) for p in ls_rec_path(path)])
+        def path_to_data(path, is_y=False):
+            paths = ls_rec_path(path)
+            n_samples = np.min([sample_size, len(paths)])
+            return np.array([to_img(p, is_y) for p in paths[:n_samples]])
 
-        X_tr = path_to_data(train_dir + "images")
-        Y = path_to_data(train_dir + "groundtruth") > 127
-        X_te = path_to_data(test_dir)
-        print("data Loaded")
+        X_tr = path_to_data(train_dir + "images").astype(np.uint8)
+        Y = (path_to_data(train_dir + "groundtruth", True) > 127).astype(np.uint8)
+        X_te = path_to_data(test_dir).astype(np.uint8)
+        print("data loaded")
         return X_tr, Y, X_te
 
-    def train(self, batch_size=4, epochs=10, verbose=1, validation_split=0.2, shuffle=True, callbacks=None):
+    def train(self, data_dir="../data", deepness=4, kernel_size=5, pool_size=(2, 2), sample_size=np.inf, batch_size=4, epochs=10,
+              verbose=1, validation_split=0.2, shuffle=True, callbacks=None):
 
-        print("loading data...")
-        X_tr, Y, X_te = self.load_data()
+        X_tr, Y, X_te = self.load_data(data_dir=data_dir, sample_size=sample_size)
 
-        print("loading model...")
-        model = self.get_model()
+        model = self.get_model(deepness=deepness, kernel_size=kernel_size, pool_size=pool_size)
 
         print('creating model checkpoint')
         model_checkpoint = ModelCheckpoint('u_net.hdf5', monitor='loss', verbose=1, save_best_only=True)
@@ -72,4 +77,4 @@ class AModel(ABC):
         np.save(path, pred)
         print('predictions saved in {}'.format(path))
 
-        return pred
+        return model, pred
