@@ -17,7 +17,7 @@ def mean_F1_score(labels, predictions):
         lab = labels[i]
         pred = tf.reshape(pred, [-1])
         lab = tf.reshape(lab, [-1])
-        F1, update_op = F1_score(lan, pred)
+        F1, update_op = F1_score(lab, pred)
         ops = tf.group(ops, update_op)
         F1_scores +=F1
 

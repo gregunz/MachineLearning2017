@@ -1,0 +1,18 @@
+2017-12-04 14:31:06.964572: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2017-12-04 14:31:06.964615: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2017-12-04 14:31:06.964620: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2017-12-04 14:31:06.964624: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2017-12-04 14:31:06.964627: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX512F instructions, but these are available on your machine and could speed up CPU computations.
+2017-12-04 14:31:06.964631: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2017-12-04 14:31:07.247609: E tensorflow/core/common_runtime/bfc_allocator.cc:244] tried to allocate 0 bytes
+2017-12-04 14:31:07.247648: W tensorflow/core/common_runtime/allocator_retry.cc:32] Request to allocate 0 bytes
+2017-12-04 14:31:07.247664: E tensorflow/core/common_runtime/bfc_allocator.cc:378] tried to deallocate nullptr
+2017-12-04 14:31:07.273281: E tensorflow/core/common_runtime/bfc_allocator.cc:244] tried to allocate 0 bytes
+2017-12-04 14:31:07.273301: W tensorflow/core/common_runtime/allocator_retry.cc:32] Request to allocate 0 bytes
+2017-12-04 14:31:07.273311: E tensorflow/core/common_runtime/bfc_allocator.cc:378] tried to deallocate nullptr
+2017-12-04 16:09:54.128437: E tensorflow/core/common_runtime/bfc_allocator.cc:244] tried to allocate 0 bytes
+2017-12-04 16:09:54.128701: W tensorflow/core/common_runtime/allocator_retry.cc:32] Request to allocate 0 bytes
+2017-12-04 16:09:54.128715: E tensorflow/core/common_runtime/bfc_allocator.cc:378] tried to deallocate nullptr
+2017-12-04 16:09:54.133857: E tensorflow/core/common_runtime/bfc_allocator.cc:244] tried to allocate 0 bytes
+2017-12-04 16:09:54.133874: W tensorflow/core/common_runtime/allocator_retry.cc:32] Request to allocate 0 bytes
+2017-12-04 16:09:54.133882: E tensorflow/core/common_runtime/bfc_allocator.cc:378] tried to deallocate nullptr
