@@ -30,9 +30,9 @@ def mean_F1_score(labels, predictions):
 #DEFINE THE BASELINE MODEL
 def baseline_model_fn(features, labels, mode, params):
 
-    h= labels.shape[1]
-    w= labels.shape[1]
-
+    h= int(features["x"].shape[1])
+    w= int(features["x"].shape[1])
+    #print(features["x"].shape)
     with tf.device('/gpu:1'):
         # Input layer
         conv1 = tf.layers.conv2d(inputs=features["x"],
@@ -197,7 +197,7 @@ def baseline_model_fn(features, labels, mode, params):
             tf.summary.image("Prediction", tf.sigmoid(logits))
             tf.summary.image("label", tf.expand_dims(labels, 3))
 
-        print(logits.shape)    
+        #print(logits.shape)    
         logits = tf.reshape(logits, [-1, h*w])
         predictions = tf.sigmoid(logits)
         predictions = tf.reshape(predictions, [-1, h, w])
@@ -208,14 +208,14 @@ def baseline_model_fn(features, labels, mode, params):
             return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
         labels = tf.reshape(labels, [-1, h*w])
-        print(labels.shape)
-        print(logits.shape)
+        #print(labels.shape)
+        #print(logits.shape)
 
         cross_entropies = tf.nn.sigmoid_cross_entropy_with_logits(labels= labels, logits= logits)
 
         #labels = tf.one_hot(tf.reshape(labels, [-1]), 2)
-        print("--------")
-        print(cross_entropies.shape)
+        #print("--------")
+        #print(cross_entropies.shape)
         loss = tf.reduce_sum(cross_entropies) #/ tf.constant(logits.shape[0], dtype=tf.float32)
         if mode == tf.estimator.ModeKeys.TRAIN:
             tf.summary.scalar('Loss',loss)

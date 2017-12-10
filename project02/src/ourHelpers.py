@@ -1,7 +1,9 @@
 import os
 import numpy as np
+import glob
 import tensorflow as tf
 from helpers import *
+import cv2
 
 from sklearn.metrics import f1_score
 
@@ -13,7 +15,7 @@ def load_training_dataset(data_path= "../",sample_size= None, binary_gt= False):
         sample_size: size of the sample to return (not randomly choosen)
         binary_gt: When True return the groudtruth as a binary image by applying a threshold at 0.5
     Return:
-        train_X, train_Y : Training images and they groundtruth
+        train_X, train_Y : Training images and they groundtruth into a numpy array
     """
     root_dir = data_path + "data/training/"
     image_dir = root_dir + "images/"
@@ -38,6 +40,48 @@ def load_training_dataset(data_path= "../",sample_size= None, binary_gt= False):
     if binary_gt:
         Y = np.array(Y>0.5).astype(np.uint8)
     return X, Y
+
+
+
+def load_test_dataset(data_path = "../", sample_size=None):
+    """ Load the test dataset
+
+    Return:
+        Test set images into a numpy array
+    """
+    root_dir = data_path + "data/test_set_images/"
+    test_paths = glob.glob(root_dir + "*/*.png")
+    #sort on the folder name (number)
+    test_paths = sorted(test_paths, key= lambda path: int(path.split("/")[3].split("_")[1]))
+    #print(test_paths)
+    X = []
+    if sample_size == None:
+        sample_size = len(test_paths)
+    for img in test_paths[:sample_size]:
+        X.append(load_image(img))
+    return np.array(X)
+
+# TODO: this methode can be beter code (cleaned)
+def save_test_prediction(data_path= "../", overlay=False, predictions=None):
+    """ Save the prediction on disk (next to the test image)
+    Params:
+        data_path: root of the data folder
+        overlay: Boolean set to true when prediction array is the
+            image with an overlay prediction 
+        predictions: array of prediction image or overlay Images
+
+    """
+    root_dir = data_path + "data/test_set_images/"
+    img_name = "overlay" if overlay else "prediction"
+    for i in range(len(predictions)):
+        img = predictions[i] if overlay else predictions[i]*255
+        if overlay:
+            img.save(root_dir+"test_" + str(i+1) + "/"+img_name+".png")
+        else:
+            cv2.imwrite(root_dir+"test_" + str(i+1) + "/"+img_name+".png", img)
+        
+
+
 
 def sk_mean_F1_score(prediction, groundtruth):
     f1s=[]

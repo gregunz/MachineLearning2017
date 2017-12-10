@@ -20,6 +20,7 @@ def mask_to_submission_strings(image_filename):
     """Reads a single image and outputs the strings that should go into the submission file"""
     img_number = int(re.search(r"\d+", image_filename).group(0))
     im = mpimg.imread(image_filename)
+    assert np.max(im) <= 1, "Max pixel intensity of your prediction is bigger that 100%"
     patch_size = 16
     for j in range(0, im.shape[1], patch_size):
         for i in range(0, im.shape[0], patch_size):
