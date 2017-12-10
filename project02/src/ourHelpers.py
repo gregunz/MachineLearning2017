@@ -50,12 +50,12 @@ def sk_mean_F1_score(prediction, groundtruth):
     return np.array(f1s).mean()
 
 # Rotate an image by a certain degree and extract all possible squares with a certain patch size
-def rotate_and_crop(image_path, angle, write_path=None, patch=None):
+def rotate_and_crop(image_paths, angle, write_path=None, patch=None):
     """
     Parameters
     ----------
-    image_path : str
-        Path to the image that will be rotated.
+    image_paths : list of str
+        Path to the images that will be rotated.
 
     angle : int
         the image will be further rotatated by this angle for each 90 degree rotation
@@ -75,25 +75,27 @@ def rotate_and_crop(image_path, angle, write_path=None, patch=None):
         print('Need to give a patch for other degree than 45')
         return None
     angles = [angle + x * 90 for x in range(0, 4)]
-    image = load_image(image_path)
     cropped_imgs = []
 
-    if (write_path):
-        k = image_path.rfind("/")
-        l = image_path.rfind('.')
-        write_path = write_path + '/' + image_path[k + 1:l]
-        os.makedirs(write_path)
-
-    for j in angles:
-
-        img = imutils.rotate_bound(image, j)
-
+    for image_path in image_paths:
+        image = load_image(image_path)
+        
         if (write_path):
-            path = write_path + '/image_' + str(j) + '/'
-            os.makedirs(path)
-            cropped_imgs.append(extract_subsquares(img, path, patch))
-        else:
-            cropped_imgs.append(extract_subsquares(img, patch))
+            k = image_path.rfind("/")
+            l = image_path.rfind('.')
+            image_folder = write_path + '/' + image_path[k+1:l]
+            os.makedirs(image_folder)
+
+        for j in angles:
+
+            img = imutils.rotate_bound(image, j)
+
+            if (write_path):
+                path = image_folder + '/image_' + str(j) +'/'
+                os.makedirs(path)
+                cropped_imgs.append(extract_subsquares(img, path, patch))
+            else:
+                cropped_imgs.append(extract_subsquares(img, patch))
 
     return cropped_imgs
 
