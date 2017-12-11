@@ -7,14 +7,14 @@ config = load_config(path="config.json")
 # dir_name = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
 save_dir = config['dst_path'] + config['model_name'] + "/"
 
-pipeline = UNet(patch_size=config['patch_size'],
-                data_dir=config['data_dir'],
+pipeline = UNet(data_dir=config['data_dir'],
                 initial_epoch=config['initial_epoch'],
                 tr_losses=config['tr_losses'],
                 val_losses=config['val_losses'])
 
 X_tr, Y, X_te = pipeline.load_data(sample_tr_img=config['sample_tr_size'],
                                    sample_te_img=config['sample_te_size'],
+                                   patch_size=config['patch_size'],
                                    stride=config['stride'],
                                    rotations=config['rotations'])
 

@@ -16,8 +16,8 @@ class Pipeline(ABC):
     def create_model(self):
         pass
 
-    def __init__(self, patch_size, data_dir='../data/', initial_epoch=0, tr_losses=None, val_losses=None, stride=None):
-        self.patch_size = patch_size
+    def __init__(self, data_dir='../data/', initial_epoch=0, tr_losses=None, val_losses=None, stride=None):
+        self.patch_size = None
         self.data_dir = data_dir
         self.initial_epoch = initial_epoch
         self.stride = stride
@@ -41,9 +41,10 @@ class Pipeline(ABC):
         self.model = None
         super().__init__()
 
-    def load_data(self, sample_tr_img=None, sample_te_img=None, stride=4, rotations=None, force_reload=False):
-        if stride is not None:
-            self.stride = stride
+    def load_data(self, patch_size=400, sample_tr_img=None, sample_te_img=None, stride=16, rotations=None, force_reload=False):
+        self.stride = stride
+        self.patch_size = patch_size
+
         if force_reload or self.X_tr is None or self.Y is None or self.X_te is None:
             print('loading data...')
 

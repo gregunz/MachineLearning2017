@@ -1,7 +1,7 @@
 {
   "data_dir": "../data/",
   "dst_path": "../output/",
-  "model_name": "unet2",
+  "model_name": "unet",
 
   "patch_size": 80,
   "stride": 16,
