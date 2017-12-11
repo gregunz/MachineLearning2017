@@ -1,0 +1,19 @@
+{
+  "data_dir": "../data/",
+  "dst_path": "../outputs/",
+
+  "model_name": "unet",
+  "patch_size": 50,
+
+  "rotations": [90, 180, 270],
+
+  "epochs": 10,
+  "sample_size": null,
+  "batch_size": 4,
+  "verbose": 1,
+  "validation_split": 0.2,
+  "shuffle": true,
+  "load_checkpoint": false,
+  "checkpoint_filename": "model_checkpoint.hdf5",
+  "save_best_only": true
+}

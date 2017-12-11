@@ -1,90 +1,36 @@
+#!/usr/bin/env python
 
-# coding: utf-8
+from datetime import datetime
 
-# In[3]:
+from helpers_config import load_config, save_config
+from unet import UNet
 
+config = load_config()
+dir_name = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
+save_dir = config['dst_path'] + dir_name + "_" + config['model_name'] + "/"
 
-import tensorflow as tf
-import matplotlib.pyplot as plt
-import numpy as np
-from helpers import *
-from ourHelpers import *
-from models import *
+pipeline = UNet(patch_size=config['patch_size'],
+                data_dir=config['data_dir'])
 
+X_tr, Y, X_te = pipeline.load_data(sample_size=config['sample_size'],
+                                   rotations=config['rotations'])
 
-# In[4]:
+pipeline.train_model(X_tr=X_tr,
+                     Y=Y,
+                     epochs=config['epochs'],
+                     sample_size=config['sample_size'],
+                     batch_size=config['batch_size'],
+                     verbose=config['verbose'],
+                     validation_split=config['validation_split'],
+                     shuffle=config['shuffle'],
+                     load_checkpoint=config['load_checkpoint'],
+                     checkpoint_path=save_dir + config['checkpoint_filename'],
+                     save_best_only=config['save_best_only'])
 
+predictions = pipeline.predict(X_te=X_te)
 
-X, Y = load_training_dataset()
-plt.imshow(concatenate_images(X[4], Y[4]))
-plt.show()
+pipeline.save_output(predictions=predictions,
+                     path=save_dir,
+                     checkpoint_path=config['checkpoint_path'])
 
-
-# # Load the model
-# 
-# The model is saved inside `model_dir` so the training can be stop at anytime and restart form the same directory
-
-# In[5]:
-
-
-config = tf.estimator.RunConfig()
-config._save_summary_steps = 20
-model_params = {"learning_rate": 0.01}
-my_estimator = tf.estimator.Estimator(model_fn=baseline_model_fn, model_dir="../model_dir",
-                                      params=model_params,config=config)
-
-
-# # Training
-# Start or continue training from the model saved at `model_dir`
-
-# In[4]:
-
-
-train_input_fn = tf.estimator.inputs.numpy_input_fn(
-    x={"x": X},
-    y=Y,
-    batch_size=10,
-    queue_capacity = 100,  # Important to avoid OOM Error
-    num_epochs=None,
-    shuffle=True)
-
-#Train
-my_estimator.train(input_fn=train_input_fn, steps=10000)
-
-
-# ## Prediction on the training set
-
-# In[8]:
-
-
-predict_input_fn = tf.estimator.inputs.numpy_input_fn(
-    x={"x": X},
-    num_epochs=1,
-    batch_size= 10,
-    queue_capacity = 10,
-    shuffle=False)
-
-predictions = [p for p in my_estimator.predict(input_fn=predict_input_fn)]
-
-
-# In[13]:
-
-
-pred = np.array([p>0.5 for p in predictions])
-Y_bin = np.array([y>0.5 for y in Y])
-sk_mean_F1_score(Y_bin, pred)
-
-
-# In[9]:
-
-
-for i, p in enumerate(predictions):
-    print(np.sum(p>0.5))
-    plt.imshow(concatenate_images(X[i], np.array(p>0.5)))
-    #plt.imshow(p)
-    plt.show()
-
-
-# # Reference:
-# 
-# How to create your own [estimator](https://www.tensorflow.org/extend/estimators) 
+save_config(save_dir, config)
