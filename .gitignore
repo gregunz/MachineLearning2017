@@ -109,3 +109,7 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+project02/\.floydexpt
+
+project02/\.floydignore
