@@ -6,7 +6,7 @@ from abstract_pipeline import Pipeline
 
 
 class UNet(Pipeline):
-    def get_model(self, deepness=4, kernel_size=3, pool_size=(2, 2)):
+    def create_model(self, deepness=4, kernel_size=3, pool_size=(2, 2)):
         if self.model is not None:
             return self.model
         else:
@@ -99,7 +99,7 @@ class UNet(Pipeline):
 
             model = Model(input=inputs, output=conv10)
 
-            model.compile(optimizer=Adam(lr=1e-4), loss='binary_crossentropy', metrics=['accuracy'])
+            model.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy', metrics=['accuracy'])
 
             print("model loaded")
             self.model = model

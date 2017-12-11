@@ -83,7 +83,7 @@ def masks_to_submission(submission_filename, *image_filenames):
             f.writelines('{}\n'.format(s) for s in mask_to_submission_strings(fn))
 
 
-def combinePrediction(img, patch_size, stride, predict_fn):
+def combine_prediction(img, patch_size, stride, predict_fn):
     """ apply per patch prediction to an image and combine the
     prediciton into one final image of same size as img
 
@@ -104,7 +104,7 @@ def combinePrediction(img, patch_size, stride, predict_fn):
     pred_final = np.zeros(img.shape)  # Accumulator for the final prediction
     pred_normalizer = np.zeros(img.shape)  # Counter of the patch per prediction per pixel
     assert h == w, "only squared image are accepted"
-    assert ((h - patch_size) % stride == 0), "The stride must be adaped on image and patch size"
+    assert ((h - patch_size) % stride == 0), "The stride must be adapted on image and patch size"
     nb_stride = (h - patch_size) / stride
     for i in range(nb_stride):
         for j in range(nb_stride):

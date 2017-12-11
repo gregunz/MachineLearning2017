@@ -3,17 +3,21 @@
   "dst_path": "../outputs/",
 
   "model_name": "unet",
-  "patch_size": 50,
+  "patch_size": 400,
+  "initial_epoch": 0,
+  "tr_losses": [],
+  "val_losses": [],
 
   "rotations": [90, 180, 270],
 
-  "epochs": 10,
-  "sample_size": null,
+  "epochs": 1,
+  "sample_tr_size": 5,
   "batch_size": 4,
   "verbose": 1,
   "validation_split": 0.2,
   "shuffle": true,
-  "load_checkpoint": false,
-  "checkpoint_filename": "model_checkpoint.hdf5",
-  "save_best_only": true
+  "load_checkpoint": true,
+  "save_best_only": true,
+
+  "sample_te_size": 5
 }

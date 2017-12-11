@@ -1,6 +1,6 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import imutils
+import matplotlib.pyplot as plt
+import numpy as np
 from PIL import Image
 
 
@@ -23,14 +23,30 @@ def img_to_gray(img):
         return (0.2989 * r + 0.5870 * g + 0.1140 * b).reshape((img.shape[0], img.shape[1], 1))
 
 
-def show(imgs, concat=True):
+def show(images, concat=True):
     if concat:
-        imgs = np.concatenate([img_to_rgb(img) for img in imgs], axis=1)
-        show(imgs, concat=False)
+        images = np.concatenate([img_to_rgb(img) for img in images], axis=1)
+        show([images], concat=False)
     else:
-        plt.figure(figsize=(15, 7))
-        plt.imshow(imgs.astype(np.uint8))
-        plt.show()
+        for img in images:
+            plt.figure(figsize=(15, 7))
+            plt.imshow((img * 255).astype(np.uint8))
+            plt.show()
+
+
+def img_to_patches(img, patch_size, stride):
+    h, w, _ = img.shape
+    assert h == w, 'height should be equal to width ({} != {})'.format(h, w)
+    assert (h - patch_size) % stride == 0, 'height - patch_size should be dividable by stride ({} % {} != 0)'.format(
+        h - patch_size, stride)
+
+    nb_stride = (h - patch_size) // stride
+    patches = []
+    for i in range(nb_stride):
+        for j in range(nb_stride):
+            patch = img[i * stride: i * stride + patch_size, j * stride: j * stride + patch_size]
+            patches.append(patch)
+    return np.array(patches)
 
 
 # Rotate an image by a certain degree and extract all possible squares with a certain patch size
@@ -88,7 +104,6 @@ def extract_subsquares(image, patch_size):
                             (np.count_nonzero(image[i, j + patch_size, :]) != 0)
 
                 if condition:
-
                     cropped = image[i:i + patch_size, j:j + patch_size, :]
                     cropped_imgs.append(cropped)
 
