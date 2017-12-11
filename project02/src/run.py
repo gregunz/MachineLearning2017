@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-from datetime import datetime
-
-from helpers_config import load_config, save_config
+from helpers_config import load_config
 from unet import UNet
 
 config = load_config(path="config.json")
@@ -35,4 +33,3 @@ predictions = pipeline.predict(X_te=X_te, sample_img=config['sample_te_size'])
 pipeline.save_output(predictions=predictions,
                      path=save_dir,
                      config=config.copy())
-

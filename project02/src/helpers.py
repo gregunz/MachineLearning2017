@@ -1,7 +1,9 @@
 # Helper functions
 
 import os
+
 import numpy as np
+
 from helpers_image import load_image
 
 

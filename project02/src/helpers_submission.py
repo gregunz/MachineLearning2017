@@ -17,6 +17,7 @@ foreground_threshold = 0.25  # percentage of pixels > 1 required to assign a for
 def predictions_to_submission(predictions, path="./"):
     return None
 
+
 # Convert an array of binary labels to a uint8
 def binary_to_uint8(img):
     rimg = (img * 255).round().astype(np.uint8)
@@ -72,7 +73,7 @@ def mask_to_submission_strings(image_filename):
         for i in range(0, im.shape[0], patch_size):
             patch = im[i:i + patch_size, j:j + patch_size]
             label = patch_to_label(patch)
-            yield("{:03d}_{}_{},{}".format(img_number, j, i, label))
+            yield ("{:03d}_{}_{},{}".format(img_number, j, i, label))
 
 
 def masks_to_submission(submission_filename, *image_filenames):

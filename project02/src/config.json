@@ -1,15 +1,16 @@
 {
   "data_dir": "../data/",
   "dst_path": "../outputs/",
-
   "model_name": "unet",
   "patch_size": 400,
   "initial_epoch": 0,
   "tr_losses": [],
   "val_losses": [],
-
-  "rotations": [90, 180, 270],
-
+  "rotations": [
+    90,
+    180,
+    270
+  ],
   "epochs": 1,
   "sample_tr_size": 5,
   "batch_size": 4,
@@ -18,6 +19,5 @@
   "shuffle": true,
   "load_checkpoint": true,
   "save_best_only": true,
-
   "sample_te_size": 5
 }
