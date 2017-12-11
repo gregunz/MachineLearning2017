@@ -125,3 +125,5 @@ def extract_subsquares(image, patch_size):
         cropped_imgs.append(cropped)
 
     return cropped_imgs
+
+

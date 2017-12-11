@@ -5,9 +5,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 from keras.callbacks import ModelCheckpoint
 
-from helpers import path_to_data
+from helpers import image_pipeline, path_to_data
 from helpers_config import save_config
-from helpers_image import img_to_patches
 from helpers_submission import predictions_to_submission
 
 
@@ -17,10 +16,11 @@ class Pipeline(ABC):
     def create_model(self):
         pass
 
-    def __init__(self, patch_size, data_dir='../data/', initial_epoch=0, tr_losses=None, val_losses=None):
-        self.path_size = patch_size
+    def __init__(self, patch_size, data_dir='../data/', initial_epoch=0, tr_losses=None, val_losses=None, stride=None):
+        self.patch_size = patch_size
         self.data_dir = data_dir
         self.initial_epoch = initial_epoch
+        self.stride = stride
         if tr_losses is None:
             tr_losses = []
         self.tr_losses = tr_losses
@@ -42,30 +42,43 @@ class Pipeline(ABC):
         super().__init__()
 
     def load_data(self, sample_tr_img=None, sample_te_img=None, stride=4, rotations=None, force_reload=False):
+        if stride is not None:
+            self.stride = stride
         if force_reload or self.X_tr is None or self.Y is None or self.X_te is None:
             print('loading data...')
 
-            X_tr = (path_to_data(self.train_dir + 'images', sample_tr_img) / 255).astype('float32')
-            self.tr_h, self.tr_w, _ = X_tr.shape[1:]
-            X_tr = np.concatenate([img_to_patches(x, self.path_size, stride) for x in X_tr])
-            self.X_tr = X_tr
-            Y = (path_to_data(self.train_dir + 'groundtruth', sample_tr_img) > 127)
-            assert Y.shape[1:] == (self.tr_h, self.tr_w), 'X_tr and Y images should be of the same size'
-            Y = Y.reshape(Y.shape + (1,))
-            Y = np.concatenate([img_to_patches(y, self.path_size, stride) for y in Y])
-            self.Y = Y
-            X_te = (path_to_data(self.test_dir, sample_te_img) / 255).astype('float32')
-            self.te_h, self.te_w, _ = X_te.shape[1:]
-            X_te = np.concatenate([img_to_patches(x, self.path_size, stride) for x in X_te])
-            self.X_te = X_te
+            self.X_tr, self.tr_h, self.tr_w = image_pipeline(
+                path=self.train_dir + 'images',
+                sample_img=sample_tr_img,
+                rotations=rotations,
+                patch_size=self.patch_size,
+                stride=self.stride)
+
+            Y, y_h, y_w = image_pipeline(
+                path=self.train_dir + 'groundtruth',
+                sample_img=sample_tr_img,
+                rotations=rotations,
+                patch_size=self.patch_size,
+                stride=self.stride)
+            self.Y = (Y > 0.5).astype(np.uint8)
+            assert (y_h, y_w) == (self.tr_h, self.tr_w), 'X_tr and Y images should be of the same size'
+
+            self.X_te, self.te_h, self.te_w = image_pipeline(
+                path=self.test_dir,
+                sample_img=sample_te_img,
+                rotations=rotations,
+                patch_size=self.patch_size,
+                stride=self.stride)
+
+            print('data loaded')
 
         if sample_tr_img is None:
             sample_tr_img = len(path_to_data(self.train_dir + 'images'))
         if sample_te_img is None:
             sample_te_img = len(path_to_data(self.test_dir))
 
-        sample_tr_patches = sample_tr_img * ((self.tr_h - self.path_size) // stride) ** 2
-        sample_te_patches = sample_tr_img * ((self.te_h - self.path_size) // stride) ** 2
+        sample_tr_patches = sample_tr_img * ((self.tr_h - self.patch_size) // self.stride) ** 2
+        sample_te_patches = sample_te_img * ((self.te_h - self.patch_size) // self.stride) ** 2
 
         if sample_tr_patches > self.X_tr.shape[0] or sample_te_patches > self.X_te.shape[0]:
             return self.load_data(sample_tr_img=sample_tr_img,
@@ -77,9 +90,9 @@ class Pipeline(ABC):
         # some assertions on data size
         for data in [self.X_tr, self.Y, self.X_te]:
             for i in range(1, 3):
-                assert data.shape[i] == self.path_size, \
+                assert data.shape[i] == self.patch_size, \
                     'data should have size equal to patch size ({} != {}) (data.shape = {})'.format(data.shape[i],
-                                                                                                    self.path_size,
+                                                                                                    self.patch_size,
                                                                                                     data.shape)
 
         return self.X_tr[:sample_tr_patches], self.Y[:sample_tr_patches], self.X_te[:sample_te_patches]
@@ -98,7 +111,9 @@ class Pipeline(ABC):
             X_tr, Y, _ = self.load_data(sample_tr_img=sample_img)
 
         if sample_img is None:
-            sample_img = len(X_tr)
+            n_patches = len(X_tr)
+        else:
+            n_patches = ((self.tr_h - self.patch_size) // self.stride) ** 2 * sample_img
 
         os.makedirs(checkpoint_path, exist_ok=load_checkpoint)
 
@@ -115,8 +130,8 @@ class Pipeline(ABC):
                                            save_best_only=save_best_only)
 
         print('training model...')
-        hist = self.model.fit(X_tr[:sample_img],
-                              Y[:sample_img],
+        hist = self.model.fit(X_tr[:n_patches],
+                              Y[:n_patches],
                               batch_size=batch_size,
                               epochs=epochs + self.initial_epoch,
                               initial_epoch=self.initial_epoch,
@@ -132,16 +147,18 @@ class Pipeline(ABC):
 
         return self.model
 
-    def predict(self, X_te=None, sample_img=None):
+    def predict(self, X_te=None, sample_img=None, batch_size=1, verbose=1):
         assert self.model is not None and self.initial_epoch > 0, 'model should have been defined and trained'
 
         if X_te is None:
             _, _, X_te = self.load_data(sample_te_img=sample_img)
 
         if sample_img is None:
-            sample_img = len(X_te)
+            n_patches = len(X_te)
+        else:
+            n_patches = ((self.te_h - self.patch_size) // self.stride) ** 2 * sample_img
 
-        return self.model.predict(X_te[:sample_img], verbose=1, batch_size=1)
+        return self.model.predict(X_te[:n_patches], verbose=verbose, batch_size=batch_size)
 
     def save_output(self, predictions, path, config=None):
         assert path[-1] is '/' or path[-1] is '\\', 'directory path should end with (back-)slash'

@@ -11,7 +11,7 @@ class UNet(Pipeline):
             return self.model
         else:
             print("loading model...")
-            inputs = Input((self.path_size, self.path_size, 3))
+            inputs = Input((self.patch_size, self.patch_size, 3))
 
             '''
             def loop(deep_ind, going_deep, convs, pools):
