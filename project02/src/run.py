@@ -14,6 +14,8 @@ pipeline = UNet(patch_size=config['patch_size'],
                 val_losses=config['val_losses'])
 
 X_tr, Y, X_te = pipeline.load_data(sample_tr_img=config['sample_tr_size'],
+                                   sample_te_img=config['sample_te_size'],
+                                   stride=config['stride'],
                                    rotations=config['rotations'])
 
 pipeline.train_model(X_tr=X_tr,

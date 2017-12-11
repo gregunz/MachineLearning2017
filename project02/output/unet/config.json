@@ -1,22 +1,22 @@
 {
   "batch_size": 4,
   "data_dir": "../data/",
-  "dst_path": "../outputs/",
+  "dst_path": "../output/",
   "epochs": 1,
   "initial_epoch": 3,
   "load_checkpoint": true,
   "model_name": "unet",
-  "patch_size": 40,
+  "patch_size": 80,
   "rotations": [
     90,
     180,
     270
   ],
-  "sample_te_size": 5,
-  "sample_tr_size": 5,
+  "sample_te_img": 5,
+  "sample_tr_img": 5,
   "save_best_only": true,
   "shuffle": true,
-  "stride": 4,
+  "stride": 16,
   "tr_losses": [
     1.9589331150054932,
     0.6935698986053467,

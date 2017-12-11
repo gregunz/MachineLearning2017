@@ -1,6 +1,6 @@
 {
   "data_dir": "../data/",
-  "dst_path": "../outputs/",
+  "dst_path": "../output/",
   "model_name": "unet",
   "patch_size": 400,
   "initial_epoch": 0,
@@ -12,12 +12,12 @@
     270
   ],
   "epochs": 1,
-  "sample_tr_size": 5,
+  "sample_tr_img": 5,
   "batch_size": 4,
   "verbose": 1,
   "validation_split": 0.2,
   "shuffle": true,
-  "load_checkpoint": true,
+  "load_checkpoint": false,
   "save_best_only": true,
-  "sample_te_size": 5
+  "sample_te_img": 5
 }

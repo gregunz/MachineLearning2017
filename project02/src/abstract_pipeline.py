@@ -48,7 +48,6 @@ class Pipeline(ABC):
             X_tr = (path_to_data(self.train_dir + 'images', sample_tr_img) / 255).astype('float32')
             self.tr_h, self.tr_w, _ = X_tr.shape[1:]
             X_tr = np.concatenate([img_to_patches(x, self.path_size, stride) for x in X_tr])
-            print(X_tr.shape)
             self.X_tr = X_tr
             Y = (path_to_data(self.train_dir + 'groundtruth', sample_tr_img) > 127)
             assert Y.shape[1:] == (self.tr_h, self.tr_w), 'X_tr and Y images should be of the same size'
@@ -67,8 +66,6 @@ class Pipeline(ABC):
 
         sample_tr_patches = sample_tr_img * ((self.tr_h - self.path_size) // stride) ** 2
         sample_te_patches = sample_tr_img * ((self.te_h - self.path_size) // stride) ** 2
-
-        print(sample_tr_patches, self.X_tr.shape[0])
 
         if sample_tr_patches > self.X_tr.shape[0] or sample_te_patches > self.X_te.shape[0]:
             return self.load_data(sample_tr_img=sample_tr_img,
