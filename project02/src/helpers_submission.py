@@ -106,12 +106,36 @@ def combine_prediction(img, patch_size, stride, predict_fn):
     pred_normalizer = np.zeros(img.shape)  # Counter of the patch per prediction per pixel
     assert h == w, "only squared image are accepted"
     assert ((h - patch_size) % stride == 0), "The stride must be adapted on image and patch size"
-    nb_stride = (h - patch_size) / stride
-    for i in range(nb_stride):
-        for j in range(nb_stride):
-            pred_final[i * stride: i * stride + patch_size,
-            j * stride: j * stride + patch_size] += predict_fn(img[i * stride: i * stride + patch_size,
-                                                               j * stride: j * stride + patch_size])
-            pred_normalizer[i * stride: i * stride + patch_size,
-            j * stride: j * stride + patch_size] += 1
+    n_stride = (h - patch_size) / stride + 1
+    for i in range(n_stride):
+        for j in range(n_stride):
+            x_from, x_to = i * stride, i * stride + patch_size
+            y_from, y_to = j * stride, j * stride + patch_size
+            pred_final[x_from: x_to, y_from: y_to] += predict_fn(img[x_from: x_to, y_from: y_to])
+            pred_normalizer[x_from: x_to, y_from: y_to] += 1
+    return pred_final / pred_normalizer
+
+
+def combine_prediction2(patches, stride, img_shape):
+    assert len(img_shape) == 2, "The img must be an image and not a batch of images"
+
+    h, w = img_shape
+    patch_size = patches.shape[1]
+    n_stride = (h - patch_size) // stride + 1
+    print(n_stride)
+
+    assert h == w, "only squared image are accepted"
+    assert (h - patch_size) % stride == 0, "The stride must be adapted on image and patch size"
+    assert len(patches) % n_stride**2 == 0, "They must be the right number of patches per image"
+
+    pred_final = np.zeros(img_shape)  # Accumulator for the final prediction
+    pred_normalizer = np.zeros(img_shape)  # Counter of the patch per prediction per pixel
+
+    for i in range(n_stride):
+        for j in range(n_stride):
+            x_from, x_to = i * stride, i * stride + patch_size
+            y_from, y_to = j * stride, j * stride + patch_size
+            idx = i * n_stride + j
+            pred_final[x_from: x_to, y_from: y_to] += patches[idx]
+            pred_normalizer[x_from: x_to, y_from: y_to] += 1
     return pred_final / pred_normalizer

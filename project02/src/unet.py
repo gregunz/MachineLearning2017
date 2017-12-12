@@ -6,12 +6,12 @@ from abstract_pipeline import Pipeline
 
 
 class UNet(Pipeline):
-    def create_model(self, deepness=4, kernel_size=3, pool_size=(2, 2)):
+    def create_model(self):
         if self.model is not None:
             return self.model
         else:
             print("loading model...")
-            inputs = Input((self.patch_size, self.patch_size, 3))
+            inputs = Input((self.patch_size, self.patch_size, self.n_channels))
 
             '''
             def loop(deep_ind, going_deep, convs, pools):

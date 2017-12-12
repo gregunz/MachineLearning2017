@@ -1,3 +1,4 @@
+import cv2
 import imutils
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +17,7 @@ def img_to_rgb(img):
 
 
 def img_to_gray(img):
-    if len(img.shape) < 3:
+    if len(img.shape) < 3 or img.shape[2] == 1:
         return img.reshape(img.shape + (1,))
     else:
         r, g, b = img[:, :, 0], img[:, :, 1], img[:, :, 2]
@@ -34,19 +35,64 @@ def show(images, concat=True):
             plt.show()
 
 
+def apply_clahe(img):
+    if len(img.shape) > 2 and img.shape[2] == 1:
+        img = img.reshape(img.shape[0], img.shape[1])
+    assert len(img.shape) == 2, 'only on one channel'
+
+    clahe = cv2.createCLAHE()
+    return img_to_gray(clahe.apply(np.array(img, dtype=np.uint8)))
+
+
+def apply_gamma_correction(img, gamma=1.2):
+    if len(img.shape) > 2 and img.shape[2] == 1:
+        img = img.reshape(img.shape[0], img.shape[1])
+    assert len(img.shape) == 2, 'only on one channel'
+
+    inv_gamma = 1.0 / gamma
+    table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype(np.uint8)
+    return img_to_gray(cv2.LUT(np.array(img, dtype=np.uint8), table))
+
+
 def img_to_patches(img, patch_size, stride):
     h, w, _ = img.shape
     assert h == w, 'height should be equal to width ({} != {})'.format(h, w)
     assert (h - patch_size) % stride == 0, 'height - patch_size should be dividable by stride ({} % {} != 0)'.format(
         h - patch_size, stride)
 
-    nb_stride = (h - patch_size) // stride
+    n_stride = (h - patch_size) // stride + 1
     patches = []
-    for i in range(nb_stride):
-        for j in range(nb_stride):
+    for i in range(n_stride):
+        for j in range(n_stride):
             patch = img[i * stride: i * stride + patch_size, j * stride: j * stride + patch_size]
             patches.append(patch)
     return np.array(patches)
+
+
+def patches_to_img(patches, stride, img_shape):
+    if len(img_shape) > 2:
+        channels = [patches_to_img(patches[:, :, :, i], stride, img_shape[:2]) for i in range(3)]
+        return np.concatenate(channels, axis=2)
+
+    h, w = img_shape
+    patch_size = patches.shape[1]
+    n_stride = (h - patch_size) // stride + 1
+
+    assert h == w, "only squared image are accepted"
+    assert (h - patch_size) % stride == 0, "The stride must be adapted on image and patch size"
+    assert len(patches) % n_stride ** 2 == 0, "They must be the right number of patches per image"
+
+    pred_final = np.zeros(img_shape + (1,))  # Accumulator for the final prediction
+    pred_normalizer = np.zeros(img_shape + (1,))  # Counter of the patch per prediction per pixel
+
+    for i in range(n_stride):
+        for j in range(n_stride):
+            x_from, x_to = i * stride, i * stride + patch_size
+            y_from, y_to = j * stride, j * stride + patch_size
+            idx = i * n_stride + j
+            pred_final[x_from: x_to, y_from: y_to] += patches[idx].reshape(patch_size, patch_size, 1)
+            pred_normalizer[x_from: x_to, y_from: y_to] += 1
+    return pred_final / pred_normalizer
 
 
 # Rotate an image by a certain degree and extract all possible squares with a certain patch size
@@ -125,5 +171,3 @@ def extract_subsquares(image, patch_size):
         cropped_imgs.append(cropped)
 
     return cropped_imgs
-
-

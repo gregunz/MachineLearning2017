@@ -16,7 +16,9 @@ class Pipeline(ABC):
     def create_model(self):
         pass
 
-    def __init__(self, data_dir='../data/', initial_epoch=0, tr_losses=None, val_losses=None, stride=None):
+    def __init__(self, data_dir='../data/', grayscale=False, initial_epoch=0, tr_losses=None, val_losses=None,
+                 stride=None):
+        self.n_channels = 1 if grayscale else 3
         self.patch_size = None
         self.data_dir = data_dir
         self.initial_epoch = initial_epoch
@@ -41,7 +43,8 @@ class Pipeline(ABC):
         self.model = None
         super().__init__()
 
-    def load_data(self, patch_size=400, sample_tr_img=None, sample_te_img=None, stride=16, rotations=None, force_reload=False):
+    def load_data(self, patch_size=80, stride=16, normalized=False, clahe=False, gamma=False, rotations=None,
+                  force_reload=False, sample_tr_img=None, sample_te_img=None):
         self.stride = stride
         self.patch_size = patch_size
 
@@ -53,14 +56,22 @@ class Pipeline(ABC):
                 sample_img=sample_tr_img,
                 rotations=rotations,
                 patch_size=self.patch_size,
-                stride=self.stride)
+                stride=self.stride,
+                grayscale=self.n_channels == 1,
+                normalized=normalized,
+                clahe=clahe,
+                gamma=gamma)
 
             Y, y_h, y_w = image_pipeline(
                 path=self.train_dir + 'groundtruth',
                 sample_img=sample_tr_img,
                 rotations=rotations,
                 patch_size=self.patch_size,
-                stride=self.stride)
+                stride=self.stride,
+                grayscale=False,
+                normalized=False,
+                clahe=False,
+                gamma=False)
             self.Y = (Y > 0.5).astype(np.uint8)
             assert (y_h, y_w) == (self.tr_h, self.tr_w), 'X_tr and Y images should be of the same size'
 
@@ -69,7 +80,11 @@ class Pipeline(ABC):
                 sample_img=sample_te_img,
                 rotations=rotations,
                 patch_size=self.patch_size,
-                stride=self.stride)
+                stride=self.stride,
+                grayscale=self.n_channels == 1,
+                normalized=normalized,
+                clahe=clahe,
+                gamma=gamma)
 
             print('data loaded')
 
@@ -78,8 +93,10 @@ class Pipeline(ABC):
         if sample_te_img is None:
             sample_te_img = len(path_to_data(self.test_dir))
 
-        sample_tr_patches = sample_tr_img * ((self.tr_h - self.patch_size) // self.stride) ** 2
-        sample_te_patches = sample_te_img * ((self.te_h - self.patch_size) // self.stride) ** 2
+        sample_tr_patches = sample_tr_img * ((self.tr_h - self.patch_size) // self.stride + 1) ** 2 * (
+                len(rotations) + 1)
+        sample_te_patches = sample_te_img * ((self.te_h - self.patch_size) // self.stride + 1) ** 2 * (
+                len(rotations) + 1)
 
         if sample_tr_patches > self.X_tr.shape[0] or sample_te_patches > self.X_te.shape[0]:
             return self.load_data(sample_tr_img=sample_tr_img,
@@ -114,7 +131,7 @@ class Pipeline(ABC):
         if sample_img is None:
             n_patches = len(X_tr)
         else:
-            n_patches = ((self.tr_h - self.patch_size) // self.stride) ** 2 * sample_img
+            n_patches = ((self.tr_h - self.patch_size) // self.stride + 1) ** 2 * sample_img
 
         os.makedirs(checkpoint_path, exist_ok=load_checkpoint)
 
@@ -157,7 +174,7 @@ class Pipeline(ABC):
         if sample_img is None:
             n_patches = len(X_te)
         else:
-            n_patches = ((self.te_h - self.patch_size) // self.stride) ** 2 * sample_img
+            n_patches = ((self.te_h - self.patch_size) // self.stride + 1) ** 2 * sample_img
 
         return self.model.predict(X_te[:n_patches], verbose=verbose, batch_size=batch_size)
 
