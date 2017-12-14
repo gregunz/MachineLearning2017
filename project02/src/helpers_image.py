@@ -24,15 +24,19 @@ def img_to_gray(img):
         return (0.2989 * r + 0.5870 * g + 0.1140 * b).reshape((img.shape[0], img.shape[1], 1))
 
 
-def show(images, concat=True):
+def show(images, concat=True, return_plots=False):
     if concat:
         images = np.concatenate([img_to_rgb(img) for img in images], axis=1)
-        show([images], concat=False)
+        return show([images], concat=False, return_plots=return_plots)
     else:
+        plots = []
         for img in images:
-            plt.figure(figsize=(15, 7))
+            fig = plt.figure(figsize=(15, 7))
+            plots.append(fig)
             plt.imshow((img * 255).astype(np.uint8))
             plt.show()
+        if return_plots:
+            return plots
 
 
 def apply_clahe(img):
@@ -80,7 +84,7 @@ def patches_to_img(patches, stride, img_shape):
 
     assert h == w, "only squared image are accepted"
     assert (h - patch_size) % stride == 0, "The stride must be adapted on image and patch size"
-    assert len(patches) % n_stride ** 2 == 0, "They must be the right number of patches per image"
+    assert len(patches) == n_stride ** 2, "They must be the right number of patches per image"
 
     pred_final = np.zeros(img_shape + (1,))  # Accumulator for the final prediction
     pred_normalizer = np.zeros(img_shape + (1,))  # Counter of the patch per prediction per pixel
@@ -93,6 +97,23 @@ def patches_to_img(patches, stride, img_shape):
             pred_final[x_from: x_to, y_from: y_to] += patches[idx].reshape(patch_size, patch_size, 1)
             pred_normalizer[x_from: x_to, y_from: y_to] += 1
     return pred_final / pred_normalizer
+
+
+def patches_to_images(patches, stride, img_shape):
+    h = img_shape[0]
+    patch_size = patches.shape[1]
+    n_stride = (h - patch_size) // stride + 1
+    assert len(patches) % n_stride ** 2 == 0, "They must be the right number of patches per image"
+
+    n_images = len(patches) // (n_stride ** 2)
+
+    images = []
+    for i in range(n_images):
+        n_patches = n_stride ** 2
+        img = patches_to_img(patches[i * n_patches:(i + 1) * n_patches], stride, img_shape)
+        images.append(img)
+
+    return np.array(images)
 
 
 # Rotate an image by a certain degree and extract all possible squares with a certain patch size

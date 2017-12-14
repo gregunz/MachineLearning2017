@@ -47,7 +47,6 @@ class UNet(Pipeline):
                         return model
                         
             model = loop(deep_ind=0, going_deep=True, convs=[], pools=[inputs])
-                        
             '''
 
             conv1 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(inputs)

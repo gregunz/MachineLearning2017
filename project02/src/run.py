@@ -4,17 +4,16 @@ from helpers_config import load_config
 from unet import UNet
 
 config = load_config(path="config.json")
-# dir_name = datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
 save_dir = config['dst_path'] + config['model_name'] + "/"
 
 pipeline = UNet(data_dir=config['data_dir'],
                 grayscale=config['grayscale'],
-                initial_epoch=config['initial_epoch'],
                 tr_losses=config['tr_losses'],
-                val_losses=config['val_losses'])
+                val_losses=config['val_losses'],
+                stride=config['stride'],
+                telepyth_token=config['telepyth_token'])
 
 X_tr, Y, X_te = pipeline.load_data(patch_size=config['patch_size'],
-                                   stride=config['stride'],
                                    normalized=config['normalized'],
                                    gamma=config['gamma'],
                                    clahe=config['clahe'],
@@ -32,7 +31,8 @@ pipeline.train_model(X_tr=X_tr,
                      shuffle=config['shuffle'],
                      load_checkpoint=config['load_checkpoint'],
                      checkpoint_path=save_dir,
-                     save_best_only=config['save_best_only'])
+                     save_best_only=config['save_best_only'],
+                     sub_epochs=config['sub_epochs'])
 
 predictions = pipeline.predict(X_te=X_te, sample_img=config['sample_te_img'])
 

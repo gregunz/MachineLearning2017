@@ -1,32 +1,31 @@
 {
   "data_dir": "../data/",
   "dst_path": "../output/",
-  "model_name": "unet",
+  "model_name": "unet_04",
+  "telepyth_token": "7693654185264259356",
 
   "patch_size": 80,
   "stride": 16,
-  "grayscale": true,
-  "normalized": true,
-  "gamma": true,
-  "clahe": true,
+  "grayscale": false,
+  "normalized": false,
+  "gamma": false,
+  "clahe": false,
   "rotations": [
-    90,
-    180,
-    270
+    90
   ],
 
-  "initial_epoch": 0,
   "tr_losses": [],
   "val_losses": [],
 
-  "epochs": 10,
+  "epochs": 1,
   "sample_tr_img": null,
-  "batch_size": 32,
+  "batch_size": 200,
   "verbose": 1,
   "validation_split": 0.2,
   "shuffle": true,
   "load_checkpoint": false,
   "save_best_only": true,
+  "sub_epochs": 10,
 
   "sample_te_img": null
 }

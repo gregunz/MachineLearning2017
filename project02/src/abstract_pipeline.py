@@ -3,11 +3,12 @@ import os
 from abc import ABC, abstractmethod
 
 import numpy as np
-from keras.callbacks import ModelCheckpoint
-
-from helpers import image_pipeline, path_to_data
+from keras.callbacks import ModelCheckpoint, LambdaCallback
+from telepyth import TelepythClient
+from helpers import image_pipeline, path_to_data, new_file_path
 from helpers_config import save_config
-from helpers_submission import predictions_to_submission
+from helpers_image import patches_to_images
+from helpers_submission import masks_to_submission
 
 
 class Pipeline(ABC):
@@ -16,12 +17,13 @@ class Pipeline(ABC):
     def create_model(self):
         pass
 
-    def __init__(self, data_dir='../data/', grayscale=False, initial_epoch=0, tr_losses=None, val_losses=None,
-                 stride=None):
+    def __init__(self, data_dir='../data/', grayscale=False, tr_losses=None, val_losses=None,
+                 stride=None, telepyth_token=None):
+        assert (tr_losses is None and val_losses is None) or len(tr_losses) == len(val_losses)
         self.n_channels = 1 if grayscale else 3
         self.patch_size = None
         self.data_dir = data_dir
-        self.initial_epoch = initial_epoch
+        self.initial_epoch = 0 if tr_losses is None else len(tr_losses)
         self.stride = stride
         if tr_losses is None:
             tr_losses = []
@@ -33,6 +35,10 @@ class Pipeline(ABC):
         self.train_dir = data_dir + 'training/'
         self.test_dir = data_dir + 'test_set_images/'
 
+        self.tp = None
+        if telepyth_token is not None:
+            self.tp = TelepythClient(telepyth_token)
+
         self.tr_h = None
         self.tr_w = None
         self.te_h = None
@@ -43,13 +49,34 @@ class Pipeline(ABC):
         self.model = None
         super().__init__()
 
+    def log(self, obj, always_print=True):
+        try:
+            if type(obj) is not str:
+                obj = json.dumps(obj)
+            else:
+                obj = obj.replace('_', '-')
+
+            if self.tp is not None:
+                self.tp.send_text(obj)
+            elif always_print:
+                print(obj)
+            else:
+                print(obj)
+        except (TypeError, ValueError):
+            print("An error happen during logging, python object is printed in stdout instead :")
+            print(obj)
+
+    def log_plot(self, fig, text=""):
+        if self.tp is not None:
+            self.tp.send_figure(fig, text)
+
     def load_data(self, patch_size=80, stride=16, normalized=False, clahe=False, gamma=False, rotations=None,
                   force_reload=False, sample_tr_img=None, sample_te_img=None):
         self.stride = stride
         self.patch_size = patch_size
 
         if force_reload or self.X_tr is None or self.Y is None or self.X_te is None:
-            print('loading data...')
+            self.log('loading data...')
 
             self.X_tr, self.tr_h, self.tr_w = image_pipeline(
                 path=self.train_dir + 'images',
@@ -86,7 +113,7 @@ class Pipeline(ABC):
                 clahe=clahe,
                 gamma=gamma)
 
-            print('data loaded')
+            self.log('data loaded')
 
         if sample_tr_img is None:
             sample_tr_img = len(path_to_data(self.train_dir + 'images'))
@@ -116,38 +143,71 @@ class Pipeline(ABC):
         return self.X_tr[:sample_tr_patches], self.Y[:sample_tr_patches], self.X_te[:sample_te_patches]
 
     def load_model(self, path):
-        print("loading weights from " + path)
+        self.log("loading weights from " + path)
         if self.model is None:
             self.model = self.create_model()
         self.model.load_weights(path)
-        print("weights loaded")
+        self.log("weights loaded")
 
-    def train_model(self, X_tr=None, Y=None, epochs=10, sample_img=None, batch_size=4, verbose=1, validation_split=0.2,
-                    shuffle=True, load_checkpoint=False, checkpoint_path='./', save_best_only=True):
+    def train_model(self, X_tr=None, Y=None, epochs=5, sample_img=None, batch_size=4, verbose=1, validation_split=0.2,
+                    shuffle=True, load_checkpoint=False, checkpoint_path='./', save_best_only=True, sub_epochs=1,
+                    validation_data=None):
+
+        assert validation_split is None or 0 <= validation_split < 1
+        assert validation_data is not None or validation_split is not None, 'only one technique at a time'
 
         if X_tr is None or Y is None:
             X_tr, Y, _ = self.load_data(sample_tr_img=sample_img)
+
+        if sub_epochs > 1:
+            indices = np.arange(X_tr.shape[0])
+            if shuffle:
+                indices = np.random.permutation(X_tr.shape[0])
+            self.log("subdividing epochs into {} smaller epochs".format(epochs * sub_epochs))
+            if validation_data is None:
+                until = int(indices.shape[0] * validation_split)
+                validation_data = (X_tr[indices[:until]], Y[indices[:until]])
+                indices = indices[until:]
+                validation_split = None
+
+            for _ in range(epochs):
+                for i in range(sub_epochs):
+                    ind_part = np.split(indices, sub_epochs)[i]
+                    self.train_model(X_tr=X_tr[ind_part], Y=Y[ind_part], epochs=1, sample_img=sample_img,
+                                     batch_size=batch_size, verbose=verbose, validation_split=validation_split,
+                                     shuffle=shuffle, load_checkpoint=load_checkpoint, checkpoint_path=checkpoint_path,
+                                     save_best_only=save_best_only, sub_epochs=1, validation_data=validation_data)
+            return self.model
 
         if sample_img is None:
             n_patches = len(X_tr)
         else:
             n_patches = ((self.tr_h - self.patch_size) // self.stride + 1) ** 2 * sample_img
 
-        os.makedirs(checkpoint_path, exist_ok=load_checkpoint)
+        os.makedirs(checkpoint_path, exist_ok=True)
 
-        name = 'weights.hdf5'
-        if load_checkpoint and self.model is None:
-            self.load_model(checkpoint_path + name)
+        if load_checkpoint and self.model is None and self.initial_epoch > 0:
+            self.load_model(checkpoint_path + 'weights_' + str(self.initial_epoch - 1).zfill(3) + ".hdf5")
 
         if self.model is None:
             self.model = self.create_model()
 
-        model_checkpoint = ModelCheckpoint(filepath=checkpoint_path + name,
+        file_path = new_file_path(checkpoint_path, 'weights', '.hdf5', self.initial_epoch - 1)
+
+        model_checkpoint = ModelCheckpoint(filepath=file_path,
                                            monitor='val_loss',
                                            verbose=verbose,
                                            save_best_only=save_best_only)
 
-        print('training model...')
+        def log_on_epoch_end(epoch, logs):
+            impr = (logs['val_loss'] - np.min(self.val_losses)) / logs['val_loss'] * 100
+            if impr > 0:
+                self.log('model val_loss reduced by {}%'.format(impr))
+            self.log((epoch, logs))
+
+        log_callback = LambdaCallback(on_epoch_end=log_on_epoch_end)
+
+        self.log('training model...')
         hist = self.model.fit(X_tr[:n_patches],
                               Y[:n_patches],
                               batch_size=batch_size,
@@ -155,9 +215,10 @@ class Pipeline(ABC):
                               initial_epoch=self.initial_epoch,
                               verbose=verbose,
                               validation_split=validation_split,
+                              validation_data=validation_data,
                               shuffle=shuffle,
-                              callbacks=[model_checkpoint])
-        print('model training done')
+                              callbacks=[model_checkpoint, log_callback])
+        self.log('model training done')
 
         self.initial_epoch += epochs
         self.tr_losses.extend(hist.history['loss'])
@@ -178,11 +239,19 @@ class Pipeline(ABC):
 
         return self.model.predict(X_te[:n_patches], verbose=verbose, batch_size=batch_size)
 
+    def create_submission(self, predictions, path):
+        assert path[-1] is '/' or path[-1] is '\\', 'directory path should end with (back-)slash'
+
+        file_path = new_file_path(path, "submission", ".csv", 0)
+
+        masks = patches_to_images(predictions, self.stride, (self.te_h, self.te_w))
+        masks_to_submission(file_path, masks)
+
     def save_output(self, predictions, path, config=None):
         assert path[-1] is '/' or path[-1] is '\\', 'directory path should end with (back-)slash'
         os.makedirs(path, exist_ok=True)
 
-        predictions_to_submission(predictions, path)
+        self.create_submission(predictions, path)
 
         with open(path + 'model_summary.json', 'w') as outfile:
             json.dump(json.loads(self.model.to_json()), outfile, indent=2, sort_keys=True)

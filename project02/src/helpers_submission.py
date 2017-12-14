@@ -14,10 +14,6 @@ nc = 3
 foreground_threshold = 0.25  # percentage of pixels > 1 required to assign a foreground label to a patch
 
 
-def predictions_to_submission(predictions, path="./"):
-    return None
-
-
 # Convert an array of binary labels to a uint8
 def binary_to_uint8(img):
     rimg = (img * 255).round().astype(np.uint8)
@@ -64,7 +60,7 @@ def patch_to_label(patch):
         return 0
 
 
-def mask_to_submission_strings(image_filename):
+def mask_file_to_submission_strings(image_filename):
     """Reads a single image and outputs the strings that should go into the submission file"""
     img_number = int(re.search(r"\d+", image_filename).group(0))
     im = mpimg.imread(image_filename)
@@ -76,12 +72,30 @@ def mask_to_submission_strings(image_filename):
             yield ("{:03d}_{}_{},{}".format(img_number, j, i, label))
 
 
-def masks_to_submission(submission_filename, *image_filenames):
+def mask_to_submission_strings(img, img_number):
+    """Reads a single image and outputs the strings that should go into the submission file"""
+    patch_size = 16
+    for j in range(0, img.shape[1], patch_size):
+        for i in range(0, img.shape[0], patch_size):
+            patch = img[i:i + patch_size, j:j + patch_size]
+            label = patch_to_label(patch)
+            yield ("{:03d}_{}_{},{}".format(img_number, j, i, label))
+
+
+def masks_files_to_submission(submission_filename, *image_filenames):
     """Converts images into a submission file"""
     with open(submission_filename, 'w') as f:
         f.write('id,prediction\n')
         for fn in image_filenames[0:]:
-            f.writelines('{}\n'.format(s) for s in mask_to_submission_strings(fn))
+            f.writelines('{}\n'.format(s) for s in mask_file_to_submission_strings(fn))
+
+
+def masks_to_submission(submission_filename, masks):
+    """Converts images into a submission file"""
+    with open(submission_filename, 'w') as f:
+        f.write('id,prediction\n')
+        for idx, mask in enumerate(masks):
+            f.writelines('{}\n'.format(s) for s in mask_to_submission_strings(mask, idx + 1))
 
 
 def combine_prediction(img, patch_size, stride, predict_fn):
