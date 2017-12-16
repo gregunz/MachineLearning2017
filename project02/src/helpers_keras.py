@@ -15,8 +15,10 @@ def recall(y_true, y_pred):
     Computes the recall, a metric for multi-label classification of
     how many relevant items are selected.
     """
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    true_positives = K.sum(K.round(K.clip(y_true_f * y_pred_f, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true_f, 0, 1)))
     return true_positives / (possible_positives + K.epsilon())
 
 
@@ -28,6 +30,8 @@ def precision(y_true, y_pred):
     Computes the precision, a metric for multi-label classification of
     how many selected items are relevant.
     """
-    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    true_positives = K.sum(K.round(K.clip(y_true_f * y_pred_f, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred_f, 0, 1)))
     return true_positives / (predicted_positives + K.epsilon())

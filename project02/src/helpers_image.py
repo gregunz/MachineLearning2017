@@ -21,7 +21,7 @@ def img_to_gray(img):
         return img.reshape(img.shape + (1,))
     else:
         r, g, b = img[:, :, 0], img[:, :, 1], img[:, :, 2]
-        return (0.2989 * r + 0.5870 * g + 0.1140 * b).reshape((img.shape[0], img.shape[1], 1))
+        return (0.2989 * r + 0.5870 * g + 0.1140 * b).reshape((img.shape[0], img.shape[1], 1)).astype(img.dtype)
 
 
 def show(images, concat=True, return_plots=False):
@@ -39,37 +39,68 @@ def show(images, concat=True, return_plots=False):
             return plots
 
 
-def apply_clahe(img):
-    if len(img.shape) > 2 and img.shape[2] == 1:
-        img = img.reshape(img.shape[0], img.shape[1])
+def apply_clahe(img, clip_limit=2.0, tile_grid_size=(8, 8)):
+    shape = img.shape
+    if len(shape) > 2 and shape[2] == 1:
+        img = img.reshape(shape[:2])
+
+    assert img.dtype == np.uint8, '0 to 255 uint8 for pixel values are expected'
     assert len(img.shape) == 2, 'only on one channel'
 
-    clahe = cv2.createCLAHE()
-    return img_to_gray(clahe.apply(np.array(img, dtype=np.uint8)))
+    clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
+    return clahe.apply(np.array(img, dtype=np.uint8)).reshape(shape)
 
 
 def apply_gamma_correction(img, gamma=1.2):
-    if len(img.shape) > 2 and img.shape[2] == 1:
-        img = img.reshape(img.shape[0], img.shape[1])
+    shape = img.shape
+    if len(shape) > 2 and shape[2] == 1:
+        img = img.reshape(shape[:2])
+
+    assert img.dtype == np.uint8, '0 to 255 uint8 for pixel values are expected'
     assert len(img.shape) == 2, 'only on one channel'
 
     inv_gamma = 1.0 / gamma
     table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype(np.uint8)
-    return img_to_gray(cv2.LUT(np.array(img, dtype=np.uint8), table))
+    return cv2.LUT(np.array(img, dtype=np.uint8), table).reshape(shape)
 
 
-def img_to_patches(img, patch_size, stride):
+def apply_rotations(images, rotations):
+    for angle in rotations:
+        assert angle % 90 == 0, 'atm only 90° angle are supported'
+    return np.array([np.rot90(img, angle // 90) for img in images for angle in rotations])
+
+
+def revert_rotations(images, rotations, fn=lambda x: np.mean(x, axis=0)):
+    for angle in rotations:
+        assert angle % 90 == 0, 'only 90° angles can be reverted'
+    assert images.shape[0] % len(rotations) == 0
+
+    n_images = len(images) // len(rotations)
+    aggregates_images = []
+    for i in range(n_images):
+        img = fn([np.rot90(images[i*len(rotations) + j], 4 - angle // 90) for j, angle in enumerate(rotations)])
+        aggregates_images.append(img)
+
+    return np.array(aggregates_images)
+
+
+def img_to_patches(img, patch_size, stride, overlapping=True):
     h, w, _ = img.shape
+
     assert h == w, 'height should be equal to width ({} != {})'.format(h, w)
-    assert (h - patch_size) % stride == 0, 'height - patch_size should be dividable by stride ({} % {} != 0)'.format(
-        h - patch_size, stride)
+    assert overlapping or patch_size % stride == 0, 'cannot have non overlapping patches with {} % {} != 0' \
+        .format(patch_size, stride)
+    assert (h - patch_size) % stride == 0, 'height - patch_size should be dividable by stride but {} % {} != 0' \
+        .format(h - patch_size, stride)
 
     n_stride = (h - patch_size) // stride + 1
     patches = []
     for i in range(n_stride):
-        for j in range(n_stride):
-            patch = img[i * stride: i * stride + patch_size, j * stride: j * stride + patch_size]
-            patches.append(patch)
+        if overlapping or i * stride % patch_size == 0:
+            for j in range(n_stride):
+                if overlapping or j * stride % patch_size == 0:
+                    patch = img[i * stride: i * stride + patch_size, j * stride: j * stride + patch_size]
+                    patches.append(patch)
     return np.array(patches)
 
 

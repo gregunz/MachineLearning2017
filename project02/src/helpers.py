@@ -5,7 +5,7 @@ import os
 import numpy as np
 from natsort import natsorted
 
-from helpers_image import load_image, img_to_patches, img_to_gray, apply_clahe, apply_gamma_correction
+from helpers_image import load_image, img_to_patches, img_to_gray, apply_clahe, apply_gamma_correction, apply_rotations
 
 
 def ls_rec_path(path):
@@ -19,41 +19,50 @@ def path_to_data(path, sample_size=None):
     return np.array([np.array(load_image(p)) for p in paths[:sample_size]])
 
 
-def image_pipeline(path, sample_img, normalized, grayscale, clahe, gamma, rotations, patch_size, stride):
-    X = path_to_data(path, sample_img)
+def image_pipeline(images_or_path, n_sample_img, grayscale, normalized, clahe, gamma, rotations, patch_size, stride,
+                   overlapping):
 
-    if len(X.shape) < 4:
-        X = X.reshape(X.shape + (1,))
-    h, w, _ = X.shape[1:]
+    if type(images_or_path) is str:
+        images = path_to_data(images_or_path, n_sample_img)
+    else:
+        images = images_or_path
+
+    if len(images.shape) < 4:
+        images = images.reshape(images.shape + (1,))
+    h, w, _ = images.shape[1:]
+
+    assert images.dtype == np.uint8, 'images should be of type uint8 with values between 0 and 255'
+
+    n_channels = 1 if grayscale else 3
 
     if grayscale:
-        X = np.array([img_to_gray(x) for x in X])
+        images = np.array([img_to_gray(img) for img in images])
 
     if normalized:
-        assert grayscale, 'normalization only if grayscale'
-        X = (X - X.mean()) / X.std()
-        X = np.array([((x - x.min()) / (x.max() - x.min())) * 255 for x in X])
+        for channel in range(n_channels):
+            images[:, :, :, channel] = \
+                np.array([((img - img.min()) / (img.max() - img.min())) * 255 for img in images[:, :, :, channel]])
 
     if clahe:
-        assert grayscale, 'apply clahe only if grayscale'
-        X = np.array([apply_clahe(x) for x in X])
+        for channel in range(n_channels):
+            images[:, :, :, channel] = np.array([apply_clahe(img) for img in images[:, :, :, channel]])
 
     if gamma:
-        assert grayscale, 'apply gamma only if grayscale'
-        X = np.array([apply_gamma_correction(x) for x in X])
+        for channel in range(n_channels):
+            images[:, :, :, channel] = np.array([apply_gamma_correction(img) for img in images[:, :, :, channel]])
 
-    X = X.astype(np.float32) / 255
-
-    if rotations:
-        rotations = rotations.copy()
-        rotations.append(0)  # in order to keep the non-rotated image more easily
-        for angle in rotations:
-            assert angle % 90 == 0, 'atm only 90° angle are supported'
-        X = np.array([np.rot90(x, angle // 90) for x in X for angle in rotations])
+    if len(rotations) > 0:
+        rotations = [0] + rotations.copy()
+        images = apply_rotations(images, rotations)
 
     if h > patch_size:
-        X = np.concatenate([img_to_patches(x, patch_size, stride) for x in X])
-    return X, h, w
+        images = np.concatenate([img_to_patches(img, patch_size, stride, overlapping=overlapping) for img in images])
+
+    assert images.dtype == np.uint8, 'images should be of type uint8 with values between 0 and 255'  # sanity check
+
+    images = images.astype(np.float32, copy=False) / 255
+
+    return images, h, w
 
 
 def new_file_path(path, filename, ext, n):
