@@ -2,7 +2,7 @@
   "seed": 1994,
   "data_dir": "../data/",
   "dst_path": "../output/",
-  "model_name": "unet_11",
+  "model_name": "unet_64_4",
   "telepyth_token": "7693654185264259356",
   "patch_size": 80,
   "stride": 16,
@@ -23,10 +23,10 @@
   "sample_tr_img": null,
   "batch_size": 200,
   "verbose": 1,
-  "validation_split": null,
+  "validation_split": 0.2,
   "shuffle": true,
   "load_checkpoint": true,
   "save_best_only": true,
-  "sub_epochs": 5,
+  "sub_epochs": 0,
   "sample_te_img": null
 }

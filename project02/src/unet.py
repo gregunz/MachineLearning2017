@@ -7,10 +7,12 @@ from helpers_keras import f1
 
 
 class UNet(Pipeline):
-    def create_model(self, deepness=4):
+    def create_model(self, from_=32, deepness=4):
         def loop(input, deep_idx, deeper, convs):
+
             assert 0 <= deep_idx <= deepness
-            filters = 32 * 2 ** deep_idx
+
+            filters = from_ * 2 ** deep_idx
             print(filters, deep_idx, len(convs))
 
             if deeper:
@@ -24,19 +26,20 @@ class UNet(Pipeline):
                 pool = MaxPooling2D(pool_size=(2, 2))(conv)
                 convs.append(conv)
                 return loop(pool, deep_idx + 1, deeper, convs)
+
             else:
                 assert deep_idx < deepness
-                convT = Conv2DTranspose(filters, (2, 2), strides=(2, 2), padding='same',
-                                        kernel_initializer='he_normal')(input)
-                up = concatenate([convT, convs[deep_idx]], axis=-1)
+                up = Conv2DTranspose(filters, (2, 2), strides=(2, 2), padding='same', kernel_initializer='he_normal')\
+                    (input)
+                up = concatenate([up, convs[deep_idx]], axis=-1)
                 conv = Conv2D(filters, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(up)
                 conv = Dropout(0.2)(conv)
                 conv = Conv2D(filters, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(conv)
 
-                if deep_idx > 0:
-                    return loop(conv, deep_idx - 1, deeper, convs)
-                else:
+                if deep_idx == 0:
                     return Conv2D(1, (1, 1), activation='sigmoid', kernel_initializer='he_normal')(conv)
+
+                return loop(conv, deep_idx - 1, deeper, convs)
 
         print("creating model...")
         inputs = Input((self.patch_size, self.patch_size, self.n_channels))
