@@ -1,7 +1,7 @@
 import json
 
 
-def load_config(path="config.json"):
+def load_config(path="default_config.json"):
     return json.load(open(path))
 
 

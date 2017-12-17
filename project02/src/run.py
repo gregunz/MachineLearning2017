@@ -43,12 +43,11 @@ if config['overlapping_tr']:
     if config['shuffle']:
         indices = np.random.permutation(n_images)
     n_val_images = int(split * n_images)
-    X_val = np.concatenate([X_tr[i*patches_per_img:(i+1)*patches_per_img] for i in indices[:n_val_images]])
-    X_tr = np.concatenate([X_tr[i*patches_per_img:(i+1)*patches_per_img] for i in indices[n_val_images:]])
-    Y_val = np.concatenate([Y[i*patches_per_img:(i+1)*patches_per_img] for i in indices[:n_val_images]])
-    Y = np.concatenate([Y[i*patches_per_img:(i+1)*patches_per_img] for i in indices[n_val_images:]])
+    X_val = np.concatenate([X_tr[i * patches_per_img:(i + 1) * patches_per_img] for i in indices[:n_val_images]])
+    X_tr = np.concatenate([X_tr[i * patches_per_img:(i + 1) * patches_per_img] for i in indices[n_val_images:]])
+    Y_val = np.concatenate([Y[i * patches_per_img:(i + 1) * patches_per_img] for i in indices[:n_val_images]])
+    Y = np.concatenate([Y[i * patches_per_img:(i + 1) * patches_per_img] for i in indices[n_val_images:]])
     validation_data = (X_val, Y_val)
-
 
 pipeline.train_model(X_tr=X_tr,
                      Y=Y,

@@ -21,7 +21,6 @@ def path_to_data(path, sample_size=None):
 
 def image_pipeline(images_or_path, n_sample_img, grayscale, normalized, clahe, gamma, rotations, patch_size, stride,
                    overlapping):
-
     if type(images_or_path) is str:
         images = path_to_data(images_or_path, n_sample_img)
     else:

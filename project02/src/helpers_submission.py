@@ -140,7 +140,7 @@ def combine_prediction2(patches, stride, img_shape):
 
     assert h == w, "only squared image are accepted"
     assert (h - patch_size) % stride == 0, "The stride must be adapted on image and patch size"
-    assert len(patches) % n_stride**2 == 0, "They must be the right number of patches per image"
+    assert len(patches) % n_stride ** 2 == 0, "They must be the right number of patches per image"
 
     pred_final = np.zeros(img_shape)  # Accumulator for the final prediction
     pred_normalizer = np.zeros(img_shape)  # Counter of the patch per prediction per pixel

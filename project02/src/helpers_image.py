@@ -78,7 +78,7 @@ def revert_rotations(images, rotations, fn=lambda x: np.mean(x, axis=0)):
     n_images = len(images) // len(rotations)
     aggregates_images = []
     for i in range(n_images):
-        img = fn([np.rot90(images[i*len(rotations) + j], 4 - angle // 90) for j, angle in enumerate(rotations)])
+        img = fn([np.rot90(images[i * len(rotations) + j], 4 - angle // 90) for j, angle in enumerate(rotations)])
         aggregates_images.append(img)
 
     return np.array(aggregates_images)
