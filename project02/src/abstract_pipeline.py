@@ -355,7 +355,7 @@ class Pipeline(ABC):
         :param batch_size: batch size used to compute the prections (if it fits in memory)
         :param verbose: 0 if we should not print computations details, 1 if we want
         :param check_if_trained: whether an assertions checks if the model has been trained already
-        :return: None
+        :return: the predictions
         """
         assert self.model is not None and (
                 not check_if_trained or self.initial_epoch > 0), 'model should have been defined and trained'
@@ -363,7 +363,7 @@ class Pipeline(ABC):
         if X_te is None:
             _, _, X_te = self.load_data()
 
-        self.model.predict(X_te, verbose=verbose, batch_size=batch_size)
+        return self.model.predict(X_te, verbose=verbose, batch_size=batch_size)
 
     def create_submission(self, masks, path, overlapping, rotations):
         """

@@ -35,7 +35,7 @@ note: the LOAD_WEIGHTS variable determines whether we should load weights or do 
  there will be a config.json (sums up the configuration used), model_summary.json (model description),
   the submission_xxx.csv and the weights of the model.
 
-## What does each file do
+## File structure
 
 - #### abstract_pipeline.py
 Define an abstract class representing an abstract pipeline which makes it easier to create multiple model and still run 
