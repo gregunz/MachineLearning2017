@@ -19,7 +19,7 @@
   ],
   "tr_losses": [],
   "val_losses": [],
-  "epochs": 4,
+  "epochs": 3,
   "sample_tr_img": null,
   "sample_te_img": null,
   "batch_size": 200,

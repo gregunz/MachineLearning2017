@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 import numpy as np
-from helpers_config import load_config
+
+from helpers import load_config
 
 config = load_config(path='default_config.json')
 save_dir = config['dst_path'] + config['model_name'] + "/"
@@ -10,6 +11,7 @@ seed = config['seed']
 np.random.seed(seed)
 
 import tensorflow as tf
+
 tf.set_random_seed(seed)
 
 from unet import UNet

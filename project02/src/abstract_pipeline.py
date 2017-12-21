@@ -6,8 +6,7 @@ import numpy as np
 from keras.callbacks import ModelCheckpoint, LambdaCallback
 from telepyth import TelepythClient
 
-from helpers import image_pipeline, path_to_data, new_file_path
-from helpers_config import save_config
+from helpers import image_pipeline, path_to_data, new_file_path, save_config
 from helpers_image import patches_to_images, revert_rotations
 from helpers_submission import masks_to_submission
 
@@ -17,7 +16,7 @@ class Pipeline(ABC):
     This class represents an abstract pipeline it easier to create multiple model and still run the same code,
     thanks to object oriented programming.
 
-    This abstract pipeline is implements loading data, loading model, training model, computing predictions,
+    This abstract pipeline implements loading data, loading model, training model, computing predictions,
     creating submission.
 
     It also features a log function which can log results on your Telegram app using telepyth.

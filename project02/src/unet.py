@@ -17,6 +17,7 @@ class UNet(Pipeline):
         :param deepness: deepness of the U-net
         :return: None
         """
+
         def loop(input, deep_idx, deeper, convs):
 
             assert 0 <= deep_idx <= deepness
@@ -38,7 +39,7 @@ class UNet(Pipeline):
 
             else:
                 assert deep_idx < deepness
-                up = Conv2DTranspose(filters, (2, 2), strides=(2, 2), padding='same', kernel_initializer='he_normal')\
+                up = Conv2DTranspose(filters, (2, 2), strides=(2, 2), padding='same', kernel_initializer='he_normal') \
                     (input)
                 up = concatenate([up, convs[deep_idx]], axis=-1)
                 conv = Conv2D(filters, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(up)

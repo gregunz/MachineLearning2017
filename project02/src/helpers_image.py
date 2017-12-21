@@ -1,5 +1,4 @@
 import cv2
-import imutils
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
@@ -227,4 +226,3 @@ def patches_to_images(patches, stride, img_shape):
         images.append(img)
 
     return np.array(images)
-
