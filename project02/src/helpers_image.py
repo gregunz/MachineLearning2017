@@ -5,11 +5,22 @@ import numpy as np
 from PIL import Image
 
 
-def load_image(infilename):
-    return Image.open(infilename)
+def load_image(file_path):
+    """
+    Load an image given it's file path (numpy ndarray of dimension n_images x height x width x n_channels)
+    :param file_path: path to the file
+    :return: numpy ndarray
+    """
+    return Image.open(file_path)
 
 
 def img_to_rgb(img):
+    """
+    Transform a grayscale image into a RGB image
+
+    :param img: grayscale image
+    :return: RGB image
+    """
     if len(img.shape) < 3 or img.shape[2] == 1:
         return np.repeat(img, 3).reshape(img.shape[0], img.shape[1], 3)
     else:
@@ -17,6 +28,11 @@ def img_to_rgb(img):
 
 
 def img_to_gray(img):
+    """
+    Tranform a RGB image into a grayscale image
+    :param img: RGB image
+    :return: grayscale image
+    """
     if len(img.shape) < 3 or img.shape[2] == 1:
         return img.reshape(img.shape + (1,))
     else:
@@ -25,6 +41,14 @@ def img_to_gray(img):
 
 
 def show(images, concat=True, return_plots=False):
+    """
+    Plots some images (useful when working in notebooks)
+
+    :param images: the images
+    :param concat: whether they should be concatenated in a single figure
+    :param return_plots: whether the plot is return
+    :return: None if plot is not return (will be shown), the plot otherwise
+    """
     if concat:
         images = np.concatenate([img_to_rgb(img) for img in images], axis=1)
         return show([images], concat=False, return_plots=return_plots)
@@ -40,6 +64,16 @@ def show(images, concat=True, return_plots=False):
 
 
 def apply_clahe(img, clip_limit=2.0, tile_grid_size=(8, 8)):
+    """
+    Apply contrast limited adaptive histogram equalization (CLAHE) to an input image
+
+    Using OpenCV: https://docs.opencv.org/3.1.0/d5/daf/tutorial_py_histogram_equalization.html
+
+    :param img: the image
+    :param clip_limit: the clip limit
+    :param tile_grid_size: the size to tile grid
+    :return: the tranformed image
+    """
     shape = img.shape
     if len(shape) > 2 and shape[2] == 1:
         img = img.reshape(shape[:2])
@@ -52,6 +86,14 @@ def apply_clahe(img, clip_limit=2.0, tile_grid_size=(8, 8)):
 
 
 def apply_gamma_correction(img, gamma=1.2):
+    """
+    Apply gamma correction to an input image
+    https://en.wikipedia.org/wiki/Gamma_correction
+
+    :param img: the image
+    :param gamma: the gamma value
+    :return: the tranformed image
+    """
     shape = img.shape
     if len(shape) > 2 and shape[2] == 1:
         img = img.reshape(shape[:2])
@@ -65,12 +107,27 @@ def apply_gamma_correction(img, gamma=1.2):
 
 
 def apply_rotations(images, rotations):
+    """
+    Rotate some input images given some angles
+
+    :param images: images to be rotated
+    :param rotations: angles for the rotations
+    :return: rotated images
+    """
     for angle in rotations:
-        assert angle % 90 == 0, 'atm only 90° angle are supported'
+        assert angle % 90 == 0, 'atm only n * 90° angle are supported'
     return np.array([np.rot90(img, angle // 90) for img in images for angle in rotations])
 
 
 def revert_rotations(images, rotations, fn=lambda x: np.mean(x, axis=0)):
+    """
+    Revert rotations to some input images and aggregates each versions using a function (e.g. the mean)
+
+    :param images: images to revert the rotations
+    :param rotations: angles for the rotations
+    :param fn: function which aggregates the images into one
+    :return: images without rotations and aggregated
+    """
     for angle in rotations:
         assert angle % 90 == 0, 'only 90° angles can be reverted'
     assert images.shape[0] % len(rotations) == 0
@@ -85,6 +142,15 @@ def revert_rotations(images, rotations, fn=lambda x: np.mean(x, axis=0)):
 
 
 def img_to_patches(img, patch_size, stride, overlapping=True):
+    """
+    Transform an image into multiple patches
+
+    :param img: the image
+    :param patch_size: the size of each patch
+    :param stride: the stride (distance by which we separate each patch)
+    :param overlapping: whether patches should overlap themselves (if not => it's like stride = patch_size)
+    :return: the patches of the images
+    """
     h, w, _ = img.shape
 
     assert h == w, 'height should be equal to width ({} != {})'.format(h, w)
@@ -105,6 +171,14 @@ def img_to_patches(img, patch_size, stride, overlapping=True):
 
 
 def patches_to_img(patches, stride, img_shape):
+    """
+    Given patches recompute the image using the mean of the superposed pixels
+
+    :param patches: the patches
+    :param stride: the stride (distance by which each patches were separated)
+    :param img_shape: the shape of the (original) output image
+    :return: the image
+    """
     if len(img_shape) > 2:
         channels = [patches_to_img(patches[:, :, :, i], stride, img_shape[:2]) for i in range(3)]
         return np.concatenate(channels, axis=2)
@@ -131,6 +205,14 @@ def patches_to_img(patches, stride, img_shape):
 
 
 def patches_to_images(patches, stride, img_shape):
+    """
+    Given patches recompute all the images using the mean of the superposed pixels
+
+    :param patches: the patches
+    :param stride: the stride (distance by which each patches were separated)
+    :param img_shape: the shape of the (original) output image
+    :return: the images
+    """
     h = img_shape[0]
     patch_size = patches.shape[1]
     n_stride = (h - patch_size) // stride + 1
@@ -146,80 +228,3 @@ def patches_to_images(patches, stride, img_shape):
 
     return np.array(images)
 
-
-# Rotate an image by a certain degree and extract all possible squares with a certain patch size
-def rotate_and_crop(images, angle, patch_size=None, four=False):
-    """
-    Parameters
-    ----------
-    images : list of str
-        Path to the images that will be rotated.
-
-    angle : int
-        the image will be further rotated by this angle
-
-    patch_size : int
-        Size of every subsquares of the specified image. Biggest image will be taken if not specified.
-
-    four : boolean
-        Whether all four rotations (angle, angle + 90, angle + 180, angle + 270) should be done
-
-
-    Returns : An array of images of size patch or max size from every rotation
-    """
-    if angle is 90:
-        return np.array([np.rot90(img, i) for img in images for i in range(4)])
-    else:
-        assert patch_size is not None, 'Need to give a patch_size for other degree than 90'
-
-        if four:
-            angles = [angle + i * 90 for i in range(4)]
-        else:
-            angles = [angle]
-
-        cropped_imgs = []
-        for img in images:
-            for j in angles:
-                img = imutils.rotate_bound(img, j)
-                cropped_imgs.append(extract_subsquares(img, patch_size))
-        return np.array(cropped_imgs)
-
-
-def extract_subsquares(image, patch_size):
-    h, w = image.shape
-    i_jump, j_jump = False, False
-
-    cropped_imgs = []
-    if patch_size:
-        i, j = 0, 0
-
-        while i < h - patch_size:
-            while j < w - patch_size:
-
-                condition = (np.count_nonzero(image[i, j, :]) != 0) and \
-                            (np.count_nonzero(image[i, j + patch_size, :]) != 0) and \
-                            (np.count_nonzero(image[i + patch_size, j, :]) != 0) and \
-                            (np.count_nonzero(image[i, j + patch_size, :]) != 0)
-
-                if condition:
-                    cropped = image[i:i + patch_size, j:j + patch_size, :]
-                    cropped_imgs.append(cropped)
-
-                if j_jump:
-                    j += patch_size
-                    j_jump = False
-                else:
-                    j += 1
-
-            if i_jump:
-                i += patch_size
-                i_jump = False
-            else:
-                i += 1
-            j = 0
-    else:
-        side = int(np.floor(h / 4))
-        cropped = image[side:3 * side, side:3 * side, :]
-        cropped_imgs.append(cropped)
-
-    return cropped_imgs

@@ -7,13 +7,21 @@ from helpers_keras import f1
 
 
 class UNet(Pipeline):
-    def create_model(self, from_=32, deepness=4):
+    def create_model(self, from_=64, deepness=4):
+        """
+        Create the U-net model
+
+        (model architecture from: https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/)
+
+        :param from_: inital number of filters for the convolution
+        :param deepness: deepness of the U-net
+        :return: None
+        """
         def loop(input, deep_idx, deeper, convs):
 
             assert 0 <= deep_idx <= deepness
 
             filters = from_ * 2 ** deep_idx
-            print(filters, deep_idx, len(convs))
 
             if deeper:
                 conv = Conv2D(filters, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(input)
@@ -21,6 +29,7 @@ class UNet(Pipeline):
                 conv = Conv2D(filters, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(conv)
 
                 if deep_idx == deepness:
+                    self.log('deepest layer - number of filters = {}'.format(filters))
                     return loop(conv, deep_idx - 1, not deeper, convs)
 
                 pool = MaxPooling2D(pool_size=(2, 2))(conv)
@@ -41,13 +50,13 @@ class UNet(Pipeline):
 
                 return loop(conv, deep_idx - 1, deeper, convs)
 
-        print("creating model...")
+        self.log("creating model...")
         inputs = Input((self.patch_size, self.patch_size, self.n_channels))
         outputs = loop(inputs, deep_idx=0, deeper=True, convs=list())
         model = Model(inputs=[inputs], outputs=[outputs])
 
         model.compile(optimizer=Adam(lr=1e-3), loss='binary_crossentropy', metrics=['accuracy', f1])
 
-        print("model created")
+        self.log("model created")
         self.model = model
         return model

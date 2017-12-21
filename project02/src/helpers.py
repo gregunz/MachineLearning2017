@@ -9,10 +9,22 @@ from helpers_image import load_image, img_to_patches, img_to_gray, apply_clahe, 
 
 
 def ls_rec_path(path):
+    """
+    List recursively all files (paths) given a directory
+
+    :param path: the directory
+    :return: list of paths (str) sorted naturally (e.g.: img_1.jpg before img_12.jpg, note the missing leading zero)
+    """
     return natsorted(["{}/{}".format(root, f) for root, _, files in os.walk(path) for f in files])
 
 
 def path_to_data(path, sample_size=None):
+    """
+    Given a path load all files inside (assumed to be images) as numpy ndarray
+    :param path: the path where images are stored
+    :param sample_size: the number of images to load (ordered)
+    :return: images (numpy ndarray of dimension n_images x height x width x n_channels)
+    """
     paths = ls_rec_path(path)
     if sample_size is None:
         sample_size = len(paths)
@@ -21,6 +33,21 @@ def path_to_data(path, sample_size=None):
 
 def image_pipeline(images_or_path, n_sample_img, grayscale, normalized, clahe, gamma, rotations, patch_size, stride,
                    overlapping):
+    """
+    Pre-process input images
+
+    :param images_or_path: images or path to images
+    :param n_sample_img: the number of images to load (ordered)
+    :param grayscale: whether the images should be loaded as grayscale images (instead of RBG)
+    :param normalized: whether the images should be normalized (for pixel this means between going from 0 to 255)
+    :param clahe: whether a contrast limited adaptive histogram equalization (CLAHE) should be applied on the images
+    :param gamma: whether a gamma correction should be applied on the images
+    :param rotations: which rotated version of the images should be added to the dataset (data augmentation)
+    :param patch_size: the size of the patches each images is divided into
+    :param stride: the stride used for each patches
+    :param overlapping: whether patches should be overlapping or not (if not, it's like stride = patch_size)
+    :return:
+    """
     if type(images_or_path) is str:
         images = path_to_data(images_or_path, n_sample_img)
     else:
@@ -65,6 +92,15 @@ def image_pipeline(images_or_path, n_sample_img, grayscale, normalized, clahe, g
 
 
 def new_file_path(path, filename, ext, n):
+    """
+    Create a unique file path to a directory given a name, extension and integer
+
+    :param path: directory path
+    :param filename: name of the file
+    :param ext: extension of the file
+    :param n: integer for the file (filename_n.ext)
+    :return: a unique file path
+    """
     assert path[-1] is '/' or path[-1] is '\\', 'directory path should end with (back-)slash'
 
     file_path = path + filename + "_" + str(n).zfill(3) + ext

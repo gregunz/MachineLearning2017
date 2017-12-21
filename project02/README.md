@@ -12,7 +12,7 @@
 ## Implementation
 
 ### Data Augmentation
-- Rotations (45°, 90°, 180°, ..., ?)
+- Rotations (45Â°, 90Â°, 180Â°, ..., ?)
 - [Massachusetts Roads Dataset][m-dataset]
 
 ### Model

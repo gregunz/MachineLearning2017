@@ -15,4 +15,5 @@ var
 
 data/*
 output/*
+old_output/*
 *tmp*
