@@ -1,9 +1,9 @@
 {
-  "seed": 1994,
+  "seed": 59,
   "data_dir": "../data/",
   "dst_path": "../output/",
-  "model_name": "unet_64_4",
-  "telepyth_token": "7693654185264259356",
+  "model_name": "final_unet",
+  "telepyth_token": null,
   "patch_size": 80,
   "stride": 16,
   "overlapping_tr": true,
@@ -21,12 +21,12 @@
   "val_losses": [],
   "epochs": 4,
   "sample_tr_img": null,
+  "sample_te_img": null,
   "batch_size": 200,
   "verbose": 1,
-  "validation_split": 0.2,
+  "validation_split": 0.0,
   "shuffle": true,
-  "load_checkpoint": true,
+  "load_checkpoint": false,
   "save_best_only": true,
-  "sub_epochs": 0,
-  "sample_te_img": null
+  "sub_epochs": 0
 }
