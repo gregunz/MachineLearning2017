@@ -123,7 +123,7 @@ class Pipeline(ABC):
         :param sample_tr_img: number of training images to be loaded from disk in this pipeline
         :param sample_te_img: number of testing images to be loaded from disk in this pipeline
         :param load_train: whether the training data should be loaded from disk
-        :param load_test: wheter the testing data should be loaded from disk
+        :param load_test: whether the testing data should be loaded from disk
         :return: X_tr (training data), Y (training groundtruth), X_te (testing data)
         """
         if stride is not None:
