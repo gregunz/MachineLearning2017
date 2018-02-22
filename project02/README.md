@@ -3,7 +3,8 @@
 [Kaggle competition][kaggle] between EPFL Machine Learning course (CS433) students
 
 Goal: (see description pdf for full details)
-Results: [Ranked 3rd][kaggle-lead] (teamname = space_invaders) out of 60+ teams (3rd position is student of previous year which had the same project)
+Results: [Ranked 3rd][kaggle-lead] (teamname = space_invaders) out of 60+ teams
+(3rd position is actually a student of previous year which already had the same project)
 
 # How-To
 ## How to prepare your environment
