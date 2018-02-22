@@ -3,7 +3,6 @@
 import csv
 import numpy as np
 
-
 def load_csv_data(data_path, sub_sample=False):
     """Loads data and returns y (class labels), tX (features) and ids (event ids)"""
     y = np.genfromtxt(data_path, delimiter=",", skip_header=1, dtype=str, usecols=1)
@@ -23,16 +22,6 @@ def load_csv_data(data_path, sub_sample=False):
 
     return yb, input_data, ids
 
-
-def predict_labels(weights, data):
-    """Generates class predictions given weights, and a test data matrix"""
-    y_pred = np.dot(data, weights)
-    y_pred[np.where(y_pred <= 0)] = -1
-    y_pred[np.where(y_pred > 0)] = 1
-    
-    return y_pred
-
-
 def create_csv_submission(ids, y_pred, name):
     """
     Creates an output file in csv format for submission to kaggle
@@ -46,7 +35,7 @@ def create_csv_submission(ids, y_pred, name):
         writer.writeheader()
         for r1, r2 in zip(ids, y_pred):
             writer.writerow({'Id':int(r1),'Prediction':int(r2)})
-            
+
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     """
     Generate a minibatch iterator for a dataset.
@@ -60,7 +49,7 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     data_size = len(y)
 
     if shuffle:
-        shuffle_indices = np.random.permutation(np.arange(data_size))   #allow us to reuse the same permutation for y and tx
+        shuffle_indices = np.random.permutation(np.arange(data_size))
         shuffled_y = y[shuffle_indices]
         shuffled_tx = tx[shuffle_indices]
     else:
@@ -71,3 +60,31 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
         end_index = min((batch_num + 1) * batch_size, data_size)
         if start_index != end_index:
             yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
+
+def range_mask(length, seq):
+    return np.array([i in seq for i in range(length)])
+
+def create_pairs(n, m, with_repetition=False, with_itself=False):
+    return [(i, j) for i in range(n) for j in range(m) if (with_repetition or j >= i) and (with_itself or j != i)]
+
+def all_combinations_of(xs, fn, combs):
+    combinations = []
+    for i, pairs in enumerate(combs):
+        combinations.append(combinations_of(xs[i], fn, pairs))
+    return combinations
+
+def combinations_of(x, fn, pairs):
+    if len(pairs) > 0:
+        combinations = [fn(x[:, a], x[:, b]).reshape((x.shape[0], 1)) for a, b in pairs]
+        return np.concatenate(combinations, axis=1)
+    return np.array([])
+
+def separate_train(xs, train_size, data_masks):
+    test_size = np.sum([m.sum() for m in data_masks]) - train_size
+    train_mask = np.r_[[True] * train_size, [False] * test_size]
+    xs_train_size = [(mask & train_mask).sum() for mask in data_masks]
+
+    xs_train = [f[:size] for f, size in zip(xs, xs_train_size)]
+    xs_test  = [f[size:] for f, size in zip(xs, xs_train_size)]
+
+    return xs_train, xs_test

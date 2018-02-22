@@ -1,7 +1,11 @@
 # [Road Segmentation Project][kaggle]
 
-Kaggle competition between EPFL Machine Learning course (CS433) students
+[Kaggle competition][kaggle] between EPFL Machine Learning course (CS433) students
 
+Goal: (see description pdf for full details)
+Results: [Ranked 3rd][kaggle-lead] (teamname = space_invaders) out of 60+ teams (3rd position is student of previous year which had the same project)
+
+# How-To
 ## How to prepare your environment
 - images should be but in the 'data' folder in the root of the projects (next to src) containing the training and testing images
 inside their respective folders ('training' and 'test_set_images' as on Kaggle)
@@ -67,5 +71,6 @@ to transform images to patches and back, etc.
     Helpers which contains submission related functions to go from masks (predictions) to a submission file
 
 [kaggle]: https://www.kaggle.com/c/epfml17-segmentation
+[kaggle-lead]: https://www.kaggle.com/c/epfml17-segmentation/leaderboard
 [weights]: https://drive.switch.ch/index.php/s/FuVnXtoJnMldFo2
 [weights_google_drive]: https://drive.google.com/open?id=1-RqtAF-T3o_7mIZQVtmQ-UGmf01SW46F
